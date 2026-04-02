@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRE Sentence Equivalence Scaffolder - Kaplan Method</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .step-container {
+            display: none;
+        }
+
+        .step-container.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .option-card {
+            transition: all 0.2s ease;
+        }
+
+        .option-card.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+
+        .feedback-box {
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .feedback-box.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 md:px-0 text-slate-800">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">GRE Sentence Equivalence</h1>
+            <p class="text-slate-500 mt-2 font-medium">The Kaplan Method</p>
+        </header>
+
+        <!-- Progress Stepper -->
+        <div class="mb-8 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-end mb-3">
+                <div>
+                    <span id="step-label" class="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 block mb-1">Step 1</span>
+                    <h2 id="step-instruction-summary" class="text-sm font-semibold text-slate-700">Read the sentence, looking for clues</h2>
+                </div>
+                <span id="step-counter" class="text-xs font-medium text-slate-400">1 / 4</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2">
+                <div id="progress-bar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 25%"></div>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <main class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden min-h-[550px] flex flex-col">
+            
+            <!-- Question Box -->
+            <div id="question-header" class="p-8 bg-slate-50 border-b border-slate-200">
+                <h2 class="text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-[0.15em]">The Sentence</h2>
+                <p id="sentence-display" class="text-xl leading-relaxed text-slate-800 font-serif italic">
+                    Loading question...
+                </p>
+            </div>
+
+            <!-- Steps -->
+            <div class="p-8 flex-grow">
+                
+                <!-- Step 1: Read & Clues -->
+                <div id="step1" class="step-container active">
+                    <div class="space-y-5">
+                        <div class="flex items-start space-x-4 text-blue-800 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+                            <div class="bg-blue-600 text-white rounded-full p-1 mt-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm">Step 1: Read the sentence, looking for clues</h3>
+                                <p class="text-xs mt-1 text-blue-700/80 leading-relaxed">Search for structural signals like "although" (contrast), "because" (support), or descriptive phrases that reveal the blank's meaning.</p>
+                            </div>
+                        </div>
+                        <div id="step1-input-area">
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Your Analysis of Clues/Pivots:</label>
+                            <textarea id="clue-input" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all h-28 text-sm" placeholder="Note down pivot words or clues here..."></textarea>
+                        </div>
+                        <div id="step1-feedback" class="feedback-box p-5 bg-blue-600 text-white rounded-2xl shadow-lg">
+                            <h4 class="font-bold text-[10px] mb-2 uppercase tracking-[0.2em] opacity-80">Expert Clue Analysis</h4>
+                            <p id="step1-feedback-text" class="text-sm leading-relaxed font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Predict -->
+                <div id="step2" class="step-container">
+                    <div class="space-y-5">
+                        <div class="flex items-start space-x-4 text-indigo-800 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
+                            <div class="bg-indigo-600 text-white rounded-full p-1 mt-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm">Step 2: Predict an answer</h3>
+                                <p class="text-xs mt-1 text-indigo-700/80 leading-relaxed">Formulate your own word for the blank before looking at the choices. This prevents bias from the options.</p>
+                            </div>
+                        </div>
+                        <div id="step2-input-area">
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">My Prediction:</label>
+                            <input type="text" id="prediction-input" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all text-sm" placeholder="Enter your predicted word...">
+                        </div>
+                        <div id="step2-feedback" class="feedback-box p-5 bg-indigo-600 text-white rounded-2xl shadow-lg">
+                            <h4 class="font-bold text-[10px] mb-2 uppercase tracking-[0.2em] opacity-80">Expert Prediction</h4>
+                            <p id="step2-feedback-text" class="text-sm leading-relaxed font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Select Match -->
+                <div id="step3" class="step-container">
+                    <div class="space-y-5">
+                        <div class="flex items-start space-x-4 text-emerald-800 bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
+                            <div class="bg-emerald-600 text-white rounded-full p-1 mt-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm">Step 3: Select the two choices that most closely match your prediction</h3>
+                                <p class="text-xs mt-1 text-emerald-700/80 leading-relaxed">Look for a pair of synonyms that both align with your predicted meaning.</p>
+                            </div>
+                        </div>
+                        <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Options generated by JS -->
+                        </div>
+                        <div id="selection-warning" class="hidden text-red-500 text-xs font-bold bg-red-50 p-2 rounded-lg text-center border border-red-100">You must select exactly two choices.</div>
+                        
+                        <div id="step3-feedback" class="feedback-box p-5 bg-emerald-600 text-white rounded-2xl shadow-lg">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <span id="accuracy-badge" class="px-2 py-0.5 bg-white text-emerald-700 text-[9px] font-black rounded uppercase tracking-tighter"></span>
+                                <h4 class="font-bold text-[10px] uppercase tracking-[0.2em] opacity-80">Choice Analysis</h4>
+                            </div>
+                            <p id="step3-feedback-text" class="text-sm leading-relaxed font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confirm -->
+                <div id="step4" class="step-container">
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4 text-amber-800 bg-amber-50/50 p-5 rounded-2xl border border-amber-100">
+                            <div class="bg-amber-600 text-white rounded-full p-1 mt-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm">Step 4: Confirm your answer by reading your selected choices into the sentence</h3>
+                                <p class="text-xs mt-1 text-amber-700/80 leading-relaxed">Ensure both choices create sentences with the same overall meaning.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                                <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Version A</h4>
+                                <p id="version-a" class="text-base text-slate-700 italic leading-relaxed"></p>
+                            </div>
+                            <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                                <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Version B</h4>
+                                <p id="version-b" class="text-base text-slate-700 italic leading-relaxed"></p>
+                            </div>
+                        </div>
+
+                        <div id="explanation-box" class="mt-6 p-7 bg-slate-900 text-white rounded-3xl shadow-2xl">
+                            <h3 class="text-xl font-bold mb-4 border-b border-slate-700 pb-3">Expert Review</h3>
+                            <div class="space-y-5 text-slate-400 text-sm">
+                                <div>
+                                    <span class="font-black text-blue-400 uppercase text-[9px] tracking-[0.25em] block mb-1">The Correct Pair</span>
+                                    <p id="correct-answer-text" class="text-white text-xl font-bold"></p>
+                                </div>
+                                <div>
+                                    <span class="font-black text-blue-400 uppercase text-[9px] tracking-[0.25em] block mb-1">Strategic Logic</span>
+                                    <p id="explanation-text" class="mt-2 leading-relaxed text-slate-300"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer Controls -->
+            <div class="p-8 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                <button id="prev-btn" class="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-0" disabled>
+                    Back
+                </button>
+                <button id="next-btn" class="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 transition-all active:scale-95">
+                    Check Step 1
+                </button>
+                <button id="restart-btn" class="hidden px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors active:scale-95">
+                    Next Question
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                sentence: "Though the CEO claimed to be an advocate of transparency, her responses to the shareholders' questions were notably _________, designed to reveal as little as possible.",
+                options: ["candid", "opaque", "ambiguous", "obscure", "forthright", "equivocal"],
+                correct: ["opaque", "obscure"],
+                clues: "The word 'Though' is your contrast pivot. It contrasts the CEO's 'claim' of transparency with her actual behavior. The clue 'reveal as little as possible' defines the blank as the direct opposite of transparency—something intentionally hidden.",
+                prediction: "Something like 'unclear', 'hidden', or 'blocking light/information'.",
+                explanation: "The pivot 'Though' signals a contrast. Since she claimed transparency but was 'designed to reveal as little as possible,' the blank must mean 'not transparent.' While 'ambiguous' and 'equivocal' mean open to multiple interpretations (signaling lack of direction), 'opaque' and 'obscure' better describe a concerted effort to withhold information by making it difficult to perceive or see through."
+            },
+            {
+                sentence: "The professor's lecture was so _________ that even the most attentive students found it difficult to follow the convoluted logic.",
+                options: ["abstruse", "pellucid", "recondite", "limpid", "manifest", "erudite"],
+                correct: ["abstruse", "recondite"],
+                clues: "The 'so... that' structure indicates cause-and-effect. The effect is 'difficult to follow' and 'convoluted logic', so the cause must be a word meaning complex or obscure.",
+                prediction: "Words like 'complex', 'obscure', or 'hard to understand'.",
+                explanation: "'Abstruse' and 'recondite' both mean difficult to understand or obscure. This perfectly matches the logic of a lecture that was 'convoluted' and 'difficult to follow'."
+            },
+            {
+                sentence: "The transition from a command economy to a market economy was anything but _________; instead, it was characterized by periods of intense volatility and social unrest.",
+                options: ["volatile", "quiescent", "pacific", "tumultuous", "seamless", "placid"],
+                correct: ["quiescent", "placid"],
+                clues: "The phrase 'anything but' acts as a negation. The blank must be the opposite of the description that follows: 'volatility and social unrest'.",
+                prediction: "A word meaning 'calm', 'peaceful', or 'stable'.",
+                explanation: "Because the transition was volatile and unrestful, it was 'anything but' calm. 'Quiescent' and 'placid' both describe a state of quiet or calm, which fits the logic of the negation."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let currentStep = 1;
+        let isFeedbackState = false;
+        let selectedOptions = [];
+
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const clueInput = document.getElementById('clue-input');
+        const predictionInput = document.getElementById('prediction-input');
+        const optionsGrid = document.getElementById('options-grid');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const stepLabel = document.getElementById('step-label');
+        const stepCounter = document.getElementById('step-counter');
+        const stepInstructionSummary = document.getElementById('step-instruction-summary');
+
+        const stepInstructions = [
+            "Read the sentence, looking for clues",
+            "Predict an answer",
+            "Select the two choices that most closely match your prediction",
+            "Confirm your answer by reading your selected choices into the sentence"
+        ];
+
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            sentenceDisplay.textContent = q.sentence;
+            
+            clueInput.value = '';
+            predictionInput.value = '';
+            selectedOptions = [];
+            isFeedbackState = false;
+            
+            optionsGrid.innerHTML = '';
+            q.options.sort().forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-card text-left p-4 rounded-xl border border-slate-200 hover:border-blue-300 text-slate-700 font-medium bg-white text-sm';
+                btn.textContent = option;
+                btn.onclick = () => {
+                    if (!isFeedbackState) toggleOption(btn, option);
+                };
+                optionsGrid.appendChild(btn);
+            });
+
+            document.querySelectorAll('.feedback-box').forEach(f => f.classList.remove('active'));
+            goToStep(1);
+        }
+
+        function toggleOption(element, option) {
+            if (selectedOptions.includes(option)) {
+                selectedOptions = selectedOptions.filter(o => o !== option);
+                element.classList.remove('selected');
+            } else {
+                if (selectedOptions.length < 2) {
+                    selectedOptions.push(option);
+                    element.classList.add('selected');
+                }
+            }
+            document.getElementById('selection-warning').classList.add('hidden');
+        }
+
+        function goToStep(step) {
+            document.querySelectorAll('.step-container').forEach(c => c.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+            isFeedbackState = false;
+            updateUI();
+        }
+
+        function updateUI() {
+            stepLabel.textContent = `Step ${currentStep}`;
+            stepInstructionSummary.textContent = stepInstructions[currentStep-1];
+            stepCounter.textContent = `${currentStep} / 4`;
+            progressBar.style.width = `${(currentStep / 4) * 100}%`;
+
+            prevBtn.disabled = (currentStep === 1 || isFeedbackState);
+            nextBtn.textContent = isFeedbackState ? "Continue" : `Check Step ${currentStep}`;
+            
+            if (currentStep === 4) {
+                updateReviewStep();
+                nextBtn.classList.add('hidden');
+                restartBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                restartBtn.classList.add('hidden');
+            }
+        }
+
+        function handleNext() {
+            const q = questions[currentQuestionIndex];
+            
+            if (!isFeedbackState) {
+                if (currentStep === 1) {
+                    if (!clueInput.value.trim()) return clueInput.focus();
+                    document.getElementById('step1-feedback-text').textContent = q.clues;
+                    document.getElementById('step1-feedback').classList.add('active');
+                } else if (currentStep === 2) {
+                    if (!predictionInput.value.trim()) return predictionInput.focus();
+                    document.getElementById('step2-feedback-text').textContent = q.prediction;
+                    document.getElementById('step2-feedback').classList.add('active');
+                } else if (currentStep === 3) {
+                    if (selectedOptions.length !== 2) {
+                        document.getElementById('selection-warning').classList.remove('hidden');
+                        return;
+                    }
+                    const isCorrect = selectedOptions.every(o => q.correct.includes(o));
+                    const badge = document.getElementById('accuracy-badge');
+                    badge.textContent = isCorrect ? "Exact Match" : "Partial Match";
+                    badge.className = isCorrect ? 
+                        "px-2 py-0.5 bg-white text-emerald-700 text-[9px] font-black rounded uppercase tracking-tighter" : 
+                        "px-2 py-0.5 bg-white text-amber-700 text-[9px] font-black rounded uppercase tracking-tighter";
+                    
+                    document.getElementById('step3-feedback-text').textContent = isCorrect ? 
+                        "Your selections perfectly match the synonym pair required by the sentence logic." : 
+                        "Let's see if these two words create identical meanings in the sentence during Step 4.";
+                    document.getElementById('step3-feedback').classList.add('active');
+                }
+                isFeedbackState = true;
+            } else {
+                goToStep(currentStep + 1);
+            }
+            updateUI();
+        }
+
+        function updateReviewStep() {
+            const q = questions[currentQuestionIndex];
+            const word1 = selectedOptions[0] || "_______";
+            const word2 = selectedOptions[1] || "_______";
+
+            document.getElementById('version-a').innerHTML = q.sentence.replace("_________", `<span class="text-amber-600 font-bold underline decoration-2 underline-offset-4">${word1}</span>`);
+            document.getElementById('version-b').innerHTML = q.sentence.replace("_________", `<span class="text-amber-600 font-bold underline decoration-2 underline-offset-4">${word2}</span>`);
+            
+            document.getElementById('correct-answer-text').textContent = q.correct.join(" & ");
+            document.getElementById('explanation-text').textContent = q.explanation;
+        }
+
+        nextBtn.onclick = handleNext;
+        prevBtn.onclick = () => {
+            if (currentStep > 1) goToStep(currentStep - 1);
+        };
+
+        restartBtn.onclick = () => {
+            currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+            loadQuestion();
+        };
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
