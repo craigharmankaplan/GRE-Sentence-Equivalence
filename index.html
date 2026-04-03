@@ -628,6 +628,7 @@
         .hint-toggle.teal h3  { color: var(--text-on-blue-bg); }
         .hint-toggle.green h3 { color: var(--text-on-green-bg); }
         .hint-toggle.gold h3  { color: var(--text-on-yellow-bg); }
+        .hint-toggle:focus { outline: none; }
         .hint-toggle:focus-visible {
             outline: var(--focus-ring);
             outline-offset: var(--focus-offset);
@@ -1045,13 +1046,6 @@
             isFeedbackState = false;
             updateUI();
 
-            setTimeout(function() {
-                var heading = stepEl.querySelector('h3');
-                if (heading) {
-                    heading.setAttribute('tabindex', '-1');
-                    heading.focus();
-                }
-            }, 100);
 
             announce('Step ' + step + ' of 4: ' + stepInstructions[step - 1]);
         }
