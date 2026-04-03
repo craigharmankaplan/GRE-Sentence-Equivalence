@@ -10,6 +10,9 @@
            Reset & CSS Variables (Kaplan Brand Palette)
            ══════════════════════════════════════════════════ */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Use focus-visible only — suppress outline on mouse/programmatic focus */
+        :focus { outline: none; }
+        :focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
         :root {
             /* Primary purple + official shades */
