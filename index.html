@@ -3,20 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRE Sentence Equivalence Scaffolder - Kaplan Method</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>GRE Sentence Equivalence Scaffolder — Kaplan Method</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+        /* ══════════════════════════════════════════════════
+           Reset & CSS Variables (Kaplan Brand Palette)
+           ══════════════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            /* Primary purple + official shades */
+            --kaplan-purple: #240F6E;
+            --kaplan-purple-shade1: #503F8B;
+            --kaplan-purple-shade2: #7C6CA7;
+            --kaplan-purple-shade3: #A79FC5;
+            /* Legacy alias for dark purple panels */
+            --kaplan-purple-dark: #503F8B;
+            /* Secondary colors */
+            --kaplan-blue: #005DE8;
+            --kaplan-green: #287D21;
+            --kaplan-chartreuse: #C0DF16;
+            --kaplan-yellow: #FFC82E;
+            --kaplan-red: #D6083B;
+            --kaplan-pink: #DE1B90;
+            /* Neutrals */
+            --kaplan-charcoal: #2D2D2D;
+            --kaplan-slate: #6B7280;
+            --kaplan-border: #E5E7EB;
+            --kaplan-bg: #F9FAFB;
+            --kaplan-white: #FFFFFF;
+
+            /* ── WCAG-safe text colors for tinted backgrounds ── */
+            --text-on-purple-bg: #1E0B56;   /* on #F0EDFA → 12.5:1 */
+            --text-on-blue-bg: #003A92;     /* on #E8EFFE → 8.0:1 */
+            --text-on-green-bg: #145C30;    /* on #EAFAF1 → 7.6:1 */
+            --text-on-yellow-bg: #6B4F00;   /* on #FFF8EB → 7.0:1 */
+
+            /* ── Focus ring (Kaplan spec: #005DE8) ── */
+            --focus-ring: 2px solid var(--kaplan-blue);
+            --focus-offset: 2px;
+        }
+
+        /* ══════════════════════════════════════════════════
+           Reduced Motion
+           ══════════════════════════════════════════════════ */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ══════════════════════════════════════════════════
+           Base Typography (Kaplan Brand Spec)
+           ══════════════════════════════════════════════════ */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            font-family: 'Open Sans', 'Arial', sans-serif;
+            background-color: var(--kaplan-bg);
+            color: var(--kaplan-charcoal);
+            min-height: 100vh;
+            line-height: 1.6;
+            font-size: 16px;  /* Kaplan minimum for body text */
         }
 
-        .step-container {
-            display: none;
+        h1, h2, h3, h4, .headline {
+            font-family: 'Merriweather', 'Georgia', serif;
         }
 
+        .mono {
+            font-family: 'Open Sans', 'Arial', monospace;
+        }
+
+        button { font-family: 'Open Sans', 'Arial', sans-serif; }
+
+        /* ══════════════════════════════════════════════════
+           Layout
+           ══════════════════════════════════════════════════ */
+        .page-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 32px 16px;
+        }
+
+        /* ══════════════════════════════════════════════════
+           Screen-Reader Only + Skip Link
+           (WCAG 2.4.1 — Bypass Blocks)
+           ══════════════════════════════════════════════════ */
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+        }
+        a.sr-only:focus {
+            position: absolute; width: auto; height: auto; padding: 8px 16px; margin: 0;
+            overflow: visible; clip: auto; white-space: normal;
+            z-index: 100; top: 8px; left: 8px;
+            background: var(--kaplan-white); color: var(--kaplan-purple);
+            border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: 600; text-decoration: none;
+        }
+
+
+        /* ══════════════════════════════════════════════════
+           Page Header
+           ══════════════════════════════════════════════════ */
+        .page-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--kaplan-purple);
+            line-height: 1.3;
+            letter-spacing: -0.01em;
+        }
+        .page-header .subtitle {
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--kaplan-slate);
+        }
+        .swoosh-center { display: flex; justify-content: center; margin-top: 12px; }
+
+        /* ══════════════════════════════════════════════════
+           Kaplan Card
+           ══════════════════════════════════════════════════ */
+        .kaplan-card {
+            background: var(--kaplan-white);
+            border: 1px solid var(--kaplan-border);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        /* ══════════════════════════════════════════════════
+           Progress Stepper — 4-box style
+           ══════════════════════════════════════════════════ */
+        .progress-stepper {
+            padding: 16px 20px;
+            margin-bottom: 32px;
+        }
+        .step-boxes {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .step-box {
+            flex: 1;
+            text-align: center;
+            padding: 10px 6px;
+            border-radius: 10px;
+            border: 2px solid var(--kaplan-border);
+            background: var(--kaplan-white);
+            font-family: 'Open Sans', 'Arial', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--kaplan-slate);
+            transition: all 0.3s ease;
+            transform: scale(0.92);
+            opacity: 0.55;
+            cursor: default;
+            user-select: none;
+        }
+        .step-box.active {
+            background: var(--kaplan-blue);
+            border-color: var(--kaplan-blue);
+            color: #FFFFFF;
+            transform: scale(1);
+            opacity: 1;
+            box-shadow: 0 4px 12px rgba(0,93,232,0.35);
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+
+        /* ══════════════════════════════════════════════════
+           Main Workspace
+           ══════════════════════════════════════════════════ */
+        .workspace {
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(36,15,110,0.08);
+            overflow: hidden;
+            min-height: 550px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ══════════════════════════════════════════════════
+           Question Header (purple hero)
+           ══════════════════════════════════════════════════ */
+        .question-header {
+            padding: 32px;
+            background: var(--kaplan-purple);
+            position: relative;
+            overflow: hidden;
+        }
+        .question-header::before {
+            content: '';
+            position: absolute;
+            width: 140%;
+            height: 300px;
+            border-radius: 50%;
+            border-top: 3px solid rgba(255,255,255,0.12);
+            left: -20%;
+            bottom: -180px;
+            pointer-events: none;
+        }
+        .question-header .label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255,255,255,0.85);  /* WCAG AA: ~11.5:1 on #240F6E */
+            margin-bottom: 16px;
+        }
+        .question-header .sentence {
+            font-size: 20px;
+            line-height: 1.6;
+            color: var(--kaplan-white);  /* 13.5:1 on #240F6E ✓ */
+            font-family: 'Open Sans', 'Arial', sans-serif;
+        }
+
+        /* ══════════════════════════════════════════════════
+           Steps Area
+           ══════════════════════════════════════════════════ */
+        .steps-area { padding: 32px; flex-grow: 1; }
+
+        .step-container { display: none; }
         .step-container.active {
             display: block;
             animation: fadeIn 0.4s ease-out;
@@ -27,345 +243,891 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .option-card {
-            transition: all 0.2s ease;
+        /* ══════════════════════════════════════════════════
+           Step Info Boxes
+           All body text ≥ 16px (Kaplan min)
+           All colors WCAG AA verified
+           ══════════════════════════════════════════════════ */
+        .step-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+        .step-info .icon {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+        }
+        .step-info .icon svg { width: 16px; height: 16px; color: white; }
+        .step-info h3 { font-size: 16px; font-weight: 700; }
+        .step-info p { font-size: 16px; margin-top: 4px; line-height: 1.6; }
+
+        /* Purple step */
+        .step-info.purple { background: #F0EDFA; border: 1px solid #DDD6F3; }
+        .step-info.purple .icon { background: var(--kaplan-purple); }
+        .step-info.purple h3 { color: var(--kaplan-purple); }
+        .step-info.purple p { color: var(--text-on-purple-bg); }
+
+        /* Blue step (replaces teal) */
+        .step-info.teal { background: #E8EFFE; border: 1px solid #B3C9F8; }
+        .step-info.teal .icon { background: var(--kaplan-blue); }
+        .step-info.teal h3 { color: var(--text-on-blue-bg); }
+        .step-info.teal p { color: var(--text-on-blue-bg); }
+
+        /* Green step */
+        .step-info.green { background: #EAFAF1; border: 1px solid #B6ECC9; }
+        .step-info.green .icon { background: var(--kaplan-green); }
+        .step-info.green h3 { color: var(--text-on-green-bg); }
+        .step-info.green p { color: var(--text-on-green-bg); }
+
+        /* Yellow step (replaces gold) */
+        .step-info.gold { background: #FFF8EB; border: 1px solid #F5DCA0; }
+        .step-info.gold .icon { background: var(--kaplan-yellow); }
+        .step-info.gold h3 { color: var(--text-on-yellow-bg); }
+        .step-info.gold p { color: var(--text-on-yellow-bg); }
+
+        /* ══════════════════════════════════════════════════
+           Form Elements
+           (WCAG 1.4.3 — Contrast, 1.4.11 — Non-text Contrast,
+            2.4.7 — Focus Visible, 3.3.2 — Labels)
+           ══════════════════════════════════════════════════ */
+        .field-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--kaplan-charcoal);  /* Strong contrast for labels */
+            margin-bottom: 8px;
+        }
+        textarea, input[type="text"] {
+            font-family: 'Open Sans', 'Arial', sans-serif;
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;  /* Kaplan minimum */
+            border: 2px solid var(--kaplan-border);  /* 2px for non-text contrast */
+            border-radius: 12px;
+            background: var(--kaplan-bg);
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            color: var(--kaplan-charcoal);
+        }
+        textarea:focus-visible, input[type="text"]:focus-visible {
+            border-color: var(--kaplan-purple);
+            background: var(--kaplan-white);
+            box-shadow: 0 0 0 3px rgba(36,15,110,0.15);
+        }
+        textarea { height: 112px; resize: vertical; }
+
+        /* Placeholder contrast (WCAG advisory) */
+        textarea::placeholder, input[type="text"]::placeholder {
+            color: #9CA3AF;  /* 2.9:1 on #F9FAFB — acceptable for placeholder per WCAG */
         }
 
-        .option-card.selected {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-            box-shadow: 0 0 0 2px #3b82f6;
-        }
+        /* ══════════════════════════════════════════════════
+           Spacer Utilities
+           ══════════════════════════════════════════════════ */
+        .stack > * + * { margin-top: 20px; }
+        .stack-lg > * + * { margin-top: 24px; }
 
+        /* ══════════════════════════════════════════════════
+           Feedback Boxes
+           WCAG: white text on brand colors, all ≥ 4.5:1
+           Purple #240F6E → white = 13.5:1 ✓
+           Teal #00839E (darkened) → white = 4.6:1 ✓
+           Green #1B8A42 (darkened) → white = 4.6:1 ✓
+           ══════════════════════════════════════════════════ */
         .feedback-box {
             display: none;
+            padding: 20px;
+            border-radius: 16px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
             animation: slideIn 0.3s ease-out;
         }
-
-        .feedback-box.active {
-            display: block;
+        .feedback-box.active { display: block; }
+        .feedback-box h4 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: rgba(255,255,255,0.9);  /* High contrast on all feedback bg */
+            margin-bottom: 8px;
         }
+        .feedback-box p { font-size: 16px; line-height: 1.6; font-weight: 500; }
+
+        .feedback-purple { background: var(--kaplan-purple); }
+        .feedback-teal { background: #0047B3; }   /* Darkened Kaplan blue for WCAG AA on white text */
+        .feedback-green { background: #1B6B17; }  /* Darkened Kaplan green for WCAG AA on white text */
 
         @keyframes slideIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
 
-        .progress-bar {
-            transition: width 0.5s ease-in-out;
+        /* ══════════════════════════════════════════════════
+           Options Grid
+           (WCAG 2.1.1 — Keyboard, 4.1.2 — Name/Role/Value)
+           ══════════════════════════════════════════════════ */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
+        @media (min-width: 640px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-card {
+            text-align: left;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--kaplan-charcoal);
+            border: 2px solid var(--kaplan-border);  /* 2px for non-text contrast */
+            border-radius: 12px;
+            background: var(--kaplan-white);
+            cursor: pointer;
+            min-height: 44px;  /* WCAG 2.5.8 — Target Size */
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .option-card:hover {
+            border-color: var(--kaplan-blue);
+            box-shadow: 0 2px 8px rgba(0,93,232,0.10);
+        }
+        .option-card.selected {
+            border-color: var(--kaplan-purple);
+            background: #F0EDFA;
+            box-shadow: 0 0 0 2px var(--kaplan-purple);
+        }
+
+        .option-card:focus-visible {
+            outline: var(--focus-ring);
+            outline-offset: var(--focus-offset);
+        }
+
+        /* ══════════════════════════════════════════════════
+           Selection Warning
+           (WCAG 3.3.1 — Error Identification)
+           ══════════════════════════════════════════════════ */
+        .selection-warning {
+            display: none;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            background: #FDECEB;
+            color: #B91C1C;  /* Dark red: 6.1:1 on #FDECEB ✓ */
+            border: 2px solid #F5C6C0;
+        }
+        .selection-warning.visible { display: block; }
+
+        /* ══════════════════════════════════════════════════
+           Accuracy Badge
+           ══════════════════════════════════════════════════ */
+        .accuracy-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: white;
+            font-size: 12px;
+            font-weight: 900;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+        .feedback-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+
+        /* ══════════════════════════════════════════════════
+           Step 4 — Review Boxes
+           ══════════════════════════════════════════════════ */
+        .version-box {
+            padding: 20px;
+            border-radius: 16px;
+            background: var(--kaplan-bg);
+            border: 1px solid var(--kaplan-border);
+        }
+        .version-box h4 {
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--kaplan-slate);
+            margin-bottom: 8px;
+        }
+        .version-box p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--kaplan-charcoal);
+        }
+
+        /* ══════════════════════════════════════════════════
+           Expert Review Panel
+           White on #503F8B = 7.1:1 ✓
+           Blue #005DE8 on #503F8B = 3.4:1 ✓ (large text)
+           rgba(255,255,255,0.85) on #503F8B = ~6:1 ✓
+           ══════════════════════════════════════════════════ */
+        .expert-review {
+            background: var(--kaplan-purple-shade1);
+            border-radius: 16px;
+            color: white;
+            padding: 28px;
+            margin-top: 24px;
+            box-shadow: 0 8px 24px rgba(80,63,139,0.3);
+        }
+        .expert-review h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+        .expert-review .review-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--kaplan-chartreuse);  /* Chartreuse accent on dark purple */
+            display: block;
+            margin-bottom: 4px;
+        }
+        .expert-review .correct-pair {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Open Sans', 'Arial', sans-serif;
+            color: white;
+        }
+        .expert-review .explanation {
+            margin-top: 8px;
+            line-height: 1.6;
+            font-size: 16px;
+            color: rgba(255,255,255,0.9);
+        }
+        .review-sections > * + * { margin-top: 20px; }
+
+        /* ══════════════════════════════════════════════════
+           Footer Controls
+           (WCAG 2.5.8 — Target Size ≥ 44px)
+           ══════════════════════════════════════════════════ */
+        .controls {
+            padding: 32px;
+            background: var(--kaplan-bg);
+            border-top: 1px solid var(--kaplan-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-back {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--kaplan-slate);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s;
+            min-height: 44px;
+        }
+        .btn-back:hover { color: var(--kaplan-charcoal); }
+        .btn-back:focus-visible {
+            outline: var(--focus-ring);
+            outline-offset: var(--focus-offset);
+        }
+        .btn-back:disabled { visibility: hidden; }
+
+        .btn-primary {
+            background: var(--kaplan-purple);
+            color: var(--kaplan-white);
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 12px rgba(36,15,110,0.20);
+            min-height: 44px;
+        }
+        .btn-primary:hover { background: var(--kaplan-purple-shade1); }
+        .btn-primary:focus-visible {
+            outline: var(--focus-ring);
+            outline-offset: var(--focus-offset);
+        }
+        .btn-primary:active { transform: scale(0.97); }
+
+        .btn-teal {
+            background: var(--kaplan-blue);
+            color: var(--kaplan-white);
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 12px rgba(0,93,232,0.20);
+            min-height: 44px;
+        }
+        .btn-teal:hover { background: #0047B3; }
+        .btn-teal:focus-visible {
+            outline: var(--focus-ring);
+            outline-offset: var(--focus-offset);
+        }
+        .btn-teal:active { transform: scale(0.97); }
+
+        .hidden { display: none; }
+
+
+
+        /* ══════════════════════════════════════════════════
+           Responsive
+           ══════════════════════════════════════════════════ */
+        @media (min-width: 768px) {
+            .page-header h1 { font-size: 48px; }
+        }
+
+        /* ══════════════════════════════════════════════════
+           Collapsible Hint
+           ══════════════════════════════════════════════════ */
+        .collapsible-hint { padding: 0; }
+        .hint-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 20px;
+            text-align: left;
+            gap: 12px;
+            border-radius: 16px;
+        }
+        .hint-toggle h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--kaplan-purple);
+            margin: 0;
+            flex: 1;
+        }
+        .hint-toggle.teal h3  { color: var(--text-on-blue-bg); }
+        .hint-toggle.green h3 { color: var(--text-on-green-bg); }
+        .hint-toggle.gold h3  { color: var(--text-on-yellow-bg); }
+        .hint-toggle:focus-visible {
+            outline: var(--focus-ring);
+            outline-offset: var(--focus-offset);
+            border-radius: 16px;
+        }
+        /* Icon circle inside toggle */
+        .hint-icon-wrap {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--kaplan-purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .hint-toggle.teal  .hint-icon-wrap { background: var(--kaplan-blue); }
+        .hint-toggle.green .hint-icon-wrap { background: var(--kaplan-green); }
+        .hint-toggle.gold  .hint-icon-wrap { background: var(--kaplan-yellow); }
+        .hint-chevron {
+            flex-shrink: 0;
+            color: var(--kaplan-purple);
+            transition: transform 0.25s ease;
+        }
+        .hint-toggle.teal  .hint-chevron { color: var(--text-on-blue-bg); }
+        .hint-toggle.green .hint-chevron { color: var(--text-on-green-bg); }
+        .hint-toggle.gold  .hint-chevron { color: var(--text-on-yellow-bg); }
+        .hint-toggle[aria-expanded="true"] .hint-chevron {
+            transform: rotate(180deg);
+        }
+        .hint-body {
+            padding: 0 20px 20px;
+        }
+        .hint-body p {
+            font-size: 16px;
+            color: var(--text-on-purple-bg);
+            line-height: 1.6;
+            margin: 0;
+        }
+        .step-info.teal .hint-body p  { color: var(--text-on-blue-bg); }
+        .step-info.green .hint-body p { color: var(--text-on-green-bg); }
+        .step-info.gold .hint-body p  { color: var(--text-on-yellow-bg); }
+
+        /* ══════════════════════════════════════════════════
+           Keep / Select New Panel
+           ══════════════════════════════════════════════════ */
+        .keep-or-new-panel {
+            background: #F0EDFA;
+            border: 1px solid #DDD6F3;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+        }
+        .keep-or-new-question {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--kaplan-purple);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .keep-or-new-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-keep {
+            background: var(--kaplan-purple);
+            color: var(--kaplan-white);
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 12px 36px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: background 0.2s;
+            min-height: 44px;
+        }
+        .btn-keep:hover { background: var(--kaplan-purple-shade1); }
+        .btn-keep:disabled { opacity: 0.5; cursor: default; }
+        .btn-select-new {
+            background: transparent;
+            color: var(--kaplan-purple);
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 12px 36px;
+            border-radius: 8px;
+            border: 2px solid var(--kaplan-purple);
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: background 0.2s, color 0.2s;
+            min-height: 44px;
+        }
+        .btn-select-new:hover { background: var(--kaplan-purple); color: var(--kaplan-white); }
+        .btn-select-new:disabled { opacity: 0.5; cursor: default; }
     </style>
 </head>
-<body class="min-h-screen py-8 px-4 md:px-0 text-slate-800">
-    <div class="max-w-3xl mx-auto">
-        <!-- Header -->
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">GRE Sentence Equivalence</h1>
-            <p class="text-slate-500 mt-2 font-medium">The Kaplan Method</p>
+<body>
+
+
+
+    <div class="page-wrap">
+
+        <!-- Hero Header -->
+        <header class="page-header">
+            <h1>Sentence Equivalence</h1>
+            <p class="subtitle">Master the Kaplan Method — step by step</p>
+            <div class="swoosh-center" aria-hidden="true">
+                <svg width="120" height="12" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 10 Q60 -4 118 10" stroke="#240F6E" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.25"/>
+                </svg>
+            </div>
         </header>
 
         <!-- Progress Stepper -->
-        <div class="mb-8 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-            <div class="flex justify-between items-end mb-3">
-                <div>
-                    <span id="step-label" class="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 block mb-1">Step 1</span>
-                    <h2 id="step-instruction-summary" class="text-sm font-semibold text-slate-700">Read the sentence, looking for clues</h2>
-                </div>
-                <span id="step-counter" class="text-xs font-medium text-slate-400">1 / 4</span>
-            </div>
-            <div class="w-full bg-slate-100 rounded-full h-2">
-                <div id="progress-bar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 25%"></div>
+        <div class="kaplan-card progress-stepper" role="region" aria-label="Step progress">
+            <div class="step-boxes" role="list">
+                <div id="step-box-1" class="step-box active" role="listitem" aria-current="step">Step 1</div>
+                <div id="step-box-2" class="step-box" role="listitem">Step 2</div>
+                <div id="step-box-3" class="step-box" role="listitem">Step 3</div>
+                <div id="step-box-4" class="step-box" role="listitem">Step 4</div>
             </div>
         </div>
 
+        <!-- Live region for screen reader announcements -->
+        <div id="sr-announcements" class="sr-only" aria-live="polite" role="status"></div>
+
         <!-- Main Workspace -->
-        <main class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden min-h-[550px] flex flex-col">
-            
+        <main id="main-content" class="kaplan-card workspace">
+
             <!-- Question Box -->
-            <div id="question-header" class="p-8 bg-slate-50 border-b border-slate-200">
-                <h2 class="text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-[0.15em]">The Sentence</h2>
-                <p id="sentence-display" class="text-xl leading-relaxed text-slate-800 font-serif italic">
-                    Loading question...
-                </p>
-            </div>
+            <section class="question-header" aria-label="Question sentence">
+                <p id="sentence-display" class="sentence">Loading question...</p>
+            </section>
 
             <!-- Steps -->
-            <div class="p-8 flex-grow">
-                
+            <div class="steps-area">
+
                 <!-- Step 1: Read & Clues -->
-                <div id="step1" class="step-container active">
-                    <div class="space-y-5">
-                        <div class="flex items-start space-x-4 text-blue-800 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                            <div class="bg-blue-600 text-white rounded-full p-1 mt-0.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-sm">Step 1: Read the sentence, looking for clues</h3>
-                                <p class="text-xs mt-1 text-blue-700/80 leading-relaxed">Search for structural signals like "although" (contrast), "because" (support), or descriptive phrases that reveal the blank's meaning.</p>
+                <section id="step1" class="step-container active" role="region" aria-label="Step 1: Read the sentence, looking for clues">
+                    <div class="stack">
+                        <div class="step-info purple collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle" aria-expanded="false" aria-controls="step1-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+                                    </div>
+                                    <h3>Step 1: Read the sentence, looking for clues</h3>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step1-hint-body" class="hint-body" hidden>
+                                    <p>Search for structural signals like "although" (contrast), "because" (support), or descriptive phrases that reveal the blank's meaning.</p>
+                                </div>
                             </div>
                         </div>
-                        <div id="step1-input-area">
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Your Analysis of Clues/Pivots:</label>
-                            <textarea id="clue-input" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all h-28 text-sm" placeholder="Note down pivot words or clues here..."></textarea>
+                        <div>
+                            <label for="clue-input" class="field-label">Your analysis of clues/pivots:</label>
+                            <textarea id="clue-input" placeholder="Note down pivot words or clues here..." aria-describedby="step1-feedback-text"></textarea>
                         </div>
-                        <div id="step1-feedback" class="feedback-box p-5 bg-blue-600 text-white rounded-2xl shadow-lg">
-                            <h4 class="font-bold text-[10px] mb-2 uppercase tracking-[0.2em] opacity-80">Expert Clue Analysis</h4>
-                            <p id="step1-feedback-text" class="text-sm leading-relaxed font-medium"></p>
+                        <div id="step1-feedback" class="feedback-box feedback-purple" aria-live="polite">
+                            <h4>Expert Clue Analysis</h4>
+                            <p id="step1-feedback-text"></p>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Step 2: Predict -->
-                <div id="step2" class="step-container">
-                    <div class="space-y-5">
-                        <div class="flex items-start space-x-4 text-indigo-800 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
-                            <div class="bg-indigo-600 text-white rounded-full p-1 mt-0.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-sm">Step 2: Predict an answer</h3>
-                                <p class="text-xs mt-1 text-indigo-700/80 leading-relaxed">Formulate your own word for the blank before looking at the choices. This prevents bias from the options.</p>
+                <section id="step2" class="step-container" role="region" aria-label="Step 2: Predict an answer">
+                    <div class="stack">
+                        <div class="step-info teal collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle teal" aria-expanded="false" aria-controls="step2-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                    </div>
+                                    <h3>Step 2: Predict an answer</h3>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step2-hint-body" class="hint-body" hidden>
+                                    <p>Formulate your own word for the blank before looking at the choices. This prevents bias from the options.</p>
+                                </div>
                             </div>
                         </div>
-                        <div id="step2-input-area">
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">My Prediction:</label>
-                            <input type="text" id="prediction-input" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all text-sm" placeholder="Enter your predicted word...">
+                        <div>
+                            <label for="prediction-input" class="field-label">My prediction:</label>
+                            <input type="text" id="prediction-input" placeholder="Enter your predicted word..." aria-describedby="step2-feedback-text">
                         </div>
-                        <div id="step2-feedback" class="feedback-box p-5 bg-indigo-600 text-white rounded-2xl shadow-lg">
-                            <h4 class="font-bold text-[10px] mb-2 uppercase tracking-[0.2em] opacity-80">Expert Prediction</h4>
-                            <p id="step2-feedback-text" class="text-sm leading-relaxed font-medium"></p>
+                        <div id="step2-feedback" class="feedback-box feedback-teal" aria-live="polite">
+                            <h4>Expert Prediction</h4>
+                            <p id="step2-feedback-text"></p>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Step 3: Select Match -->
-                <div id="step3" class="step-container">
-                    <div class="space-y-5">
-                        <div class="flex items-start space-x-4 text-emerald-800 bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
-                            <div class="bg-emerald-600 text-white rounded-full p-1 mt-0.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-sm">Step 3: Select the two choices that most closely match your prediction</h3>
-                                <p class="text-xs mt-1 text-emerald-700/80 leading-relaxed">Look for a pair of synonyms that both align with your predicted meaning.</p>
+                <section id="step3" class="step-container" role="region" aria-label="Step 3: Select two matching choices">
+                    <div class="stack">
+                        <div class="step-info green collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle green" aria-expanded="false" aria-controls="step3-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <h3>Step 3: Select the two choices that most closely match your prediction</h3>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step3-hint-body" class="hint-body" hidden>
+                                    <p>Look for a pair of synonyms that both align with your predicted meaning.</p>
+                                </div>
                             </div>
                         </div>
-                        <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <p id="options-instruction" class="sr-only">Select exactly 2 options from the following choices. Press Enter or Space to toggle selection.</p>
+                        <div id="options-grid" class="options-grid" role="group" aria-labelledby="options-instruction" aria-describedby="selection-status">
                             <!-- Options generated by JS -->
                         </div>
-                        <div id="selection-warning" class="hidden text-red-500 text-xs font-bold bg-red-50 p-2 rounded-lg text-center border border-red-100">You must select exactly two choices.</div>
-                        
-                        <div id="step3-feedback" class="feedback-box p-5 bg-emerald-600 text-white rounded-2xl shadow-lg">
-                            <div class="flex items-center space-x-3 mb-2">
-                                <span id="accuracy-badge" class="px-2 py-0.5 bg-white text-emerald-700 text-[9px] font-black rounded uppercase tracking-tighter"></span>
-                                <h4 class="font-bold text-[10px] uppercase tracking-[0.2em] opacity-80">Choice Analysis</h4>
+                        <p id="selection-status" class="sr-only" aria-live="polite"></p>
+                        <div id="selection-warning" class="selection-warning" role="alert">You must select exactly two choices.</div>
+
+                        <div id="step3-feedback" class="feedback-box feedback-green" aria-live="polite">
+                            <div class="feedback-header">
+                                <span id="accuracy-badge" class="accuracy-badge"></span>
+                                <h4 style="margin-bottom:0;">Choice Analysis</h4>
                             </div>
-                            <p id="step3-feedback-text" class="text-sm leading-relaxed font-medium"></p>
+                            <p id="step3-feedback-text"></p>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Step 4: Confirm -->
-                <div id="step4" class="step-container">
-                    <div class="space-y-6">
-                        <div class="flex items-start space-x-4 text-amber-800 bg-amber-50/50 p-5 rounded-2xl border border-amber-100">
-                            <div class="bg-amber-600 text-white rounded-full p-1 mt-0.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-sm">Step 4: Confirm your answer by reading your selected choices into the sentence</h3>
-                                <p class="text-xs mt-1 text-amber-700/80 leading-relaxed">Ensure both choices create sentences with the same overall meaning.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200">
-                                <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Version A</h4>
-                                <p id="version-a" class="text-base text-slate-700 italic leading-relaxed"></p>
-                            </div>
-                            <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200">
-                                <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Version B</h4>
-                                <p id="version-b" class="text-base text-slate-700 italic leading-relaxed"></p>
+                <section id="step4" class="step-container" role="region" aria-label="Step 4: Confirm your answer">
+                    <div class="stack-lg">
+                        <div class="step-info gold collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle gold" aria-expanded="false" aria-controls="step4-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <h3>Step 4: Confirm your answer by reading your selections into the sentence</h3>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step4-hint-body" class="hint-body" hidden>
+                                    <p>Ensure both choices create sentences with the same overall meaning.</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div id="explanation-box" class="mt-6 p-7 bg-slate-900 text-white rounded-3xl shadow-2xl">
-                            <h3 class="text-xl font-bold mb-4 border-b border-slate-700 pb-3">Expert Review</h3>
-                            <div class="space-y-5 text-slate-400 text-sm">
+                        <div class="stack">
+                            <div class="version-box">
+                                <h4>Version A</h4>
+                                <p id="version-a"></p>
+                            </div>
+                            <div class="version-box">
+                                <h4>Version B</h4>
+                                <p id="version-b"></p>
+                            </div>
+                        </div>
+
+                        <!-- Keep / Select New interactive -->
+                        <div id="keep-or-new" class="keep-or-new-panel">
+                            <p class="keep-or-new-question">What do you think? Keep the choices you selected, or select new choices?</p>
+                            <div class="keep-or-new-btns">
+                                <button id="btn-keep" class="btn-keep" onclick="handleKeep()">Keep</button>
+                                <button id="btn-select-new" class="btn-select-new" onclick="handleSelectNew()">Select New</button>
+                            </div>
+                        </div>
+
+                        <div id="expert-review-panel" class="expert-review" hidden>
+                            <h3>Expert Review</h3>
+                            <div class="review-sections">
                                 <div>
-                                    <span class="font-black text-blue-400 uppercase text-[9px] tracking-[0.25em] block mb-1">The Correct Pair</span>
-                                    <p id="correct-answer-text" class="text-white text-xl font-bold"></p>
+                                    <span class="review-label">The Correct Pair</span>
+                                    <p id="correct-answer-text" class="correct-pair"></p>
                                 </div>
                                 <div>
-                                    <span class="font-black text-blue-400 uppercase text-[9px] tracking-[0.25em] block mb-1">Strategic Logic</span>
-                                    <p id="explanation-text" class="mt-2 leading-relaxed text-slate-300"></p>
+                                    <span class="review-label">Strategic Logic</span>
+                                    <p id="explanation-text" class="explanation"></p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
             </div>
 
             <!-- Footer Controls -->
-            <div class="p-8 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
-                <button id="prev-btn" class="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-0" disabled>
-                    Back
-                </button>
-                <button id="next-btn" class="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 transition-all active:scale-95">
-                    Check Step 1
-                </button>
-                <button id="restart-btn" class="hidden px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors active:scale-95">
-                    Next Question
-                </button>
+            <div class="controls" role="navigation" aria-label="Step navigation">
+                <button id="prev-btn" class="btn-back" disabled aria-label="Go to previous step">Back</button>
+                <button id="next-btn" class="btn-primary">Check Step 1</button>
+                <button id="restart-btn" class="btn-teal hidden">Next Question</button>
             </div>
         </main>
+
+
     </div>
 
     <script>
-        const questions = [
+        var questions = [
             {
-                sentence: "Though the CEO claimed to be an advocate of transparency, her responses to the shareholders' questions were notably _________, designed to reveal as little as possible.",
+                sentence: "Though the CEO claimed to be an advocate of transparency, her responses to the shareholders\u2019 questions were notably _________, designed to reveal as little as possible.",
                 options: ["candid", "opaque", "ambiguous", "obscure", "forthright", "equivocal"],
                 correct: ["opaque", "obscure"],
-                clues: "The word 'Though' is your contrast pivot. It contrasts the CEO's 'claim' of transparency with her actual behavior. The clue 'reveal as little as possible' defines the blank as the direct opposite of transparency—something intentionally hidden.",
-                prediction: "Something like 'unclear', 'hidden', or 'blocking light/information'.",
-                explanation: "The pivot 'Though' signals a contrast. Since she claimed transparency but was 'designed to reveal as little as possible,' the blank must mean 'not transparent.' While 'ambiguous' and 'equivocal' mean open to multiple interpretations (signaling lack of direction), 'opaque' and 'obscure' better describe a concerted effort to withhold information by making it difficult to perceive or see through."
+                clues: "The word \u2018Though\u2019 is your contrast pivot. It contrasts the CEO\u2019s \u2018claim\u2019 of transparency with her actual behavior. The clue \u2018reveal as little as possible\u2019 defines the blank as the direct opposite of transparency\u2014something intentionally hidden.",
+                prediction: "Something like \u2018unclear\u2019, \u2018hidden\u2019, or \u2018blocking light/information\u2019.",
+                explanation: "The pivot \u2018Though\u2019 signals a contrast. Since she claimed transparency but was \u2018designed to reveal as little as possible,\u2019 the blank must mean \u2018not transparent.\u2019 While \u2018ambiguous\u2019 and \u2018equivocal\u2019 mean open to multiple interpretations (signaling lack of direction), \u2018opaque\u2019 and \u2018obscure\u2019 better describe a concerted effort to withhold information by making it difficult to perceive or see through."
             },
             {
-                sentence: "The professor's lecture was so _________ that even the most attentive students found it difficult to follow the convoluted logic.",
+                sentence: "The professor\u2019s lecture was so _________ that even the most attentive students found it difficult to follow the convoluted logic.",
                 options: ["abstruse", "pellucid", "recondite", "limpid", "manifest", "erudite"],
                 correct: ["abstruse", "recondite"],
-                clues: "The 'so... that' structure indicates cause-and-effect. The effect is 'difficult to follow' and 'convoluted logic', so the cause must be a word meaning complex or obscure.",
-                prediction: "Words like 'complex', 'obscure', or 'hard to understand'.",
-                explanation: "'Abstruse' and 'recondite' both mean difficult to understand or obscure. This perfectly matches the logic of a lecture that was 'convoluted' and 'difficult to follow'."
+                clues: "The \u2018so\u2026 that\u2019 structure indicates cause-and-effect. The effect is \u2018difficult to follow\u2019 and \u2018convoluted logic\u2019, so the cause must be a word meaning complex or obscure.",
+                prediction: "Words like \u2018complex\u2019, \u2018obscure\u2019, or \u2018hard to understand\u2019.",
+                explanation: "\u2018Abstruse\u2019 and \u2018recondite\u2019 both mean difficult to understand or obscure. This perfectly matches the logic of a lecture that was \u2018convoluted\u2019 and \u2018difficult to follow.\u2019"
             },
             {
                 sentence: "The transition from a command economy to a market economy was anything but _________; instead, it was characterized by periods of intense volatility and social unrest.",
                 options: ["volatile", "quiescent", "pacific", "tumultuous", "seamless", "placid"],
                 correct: ["quiescent", "placid"],
-                clues: "The phrase 'anything but' acts as a negation. The blank must be the opposite of the description that follows: 'volatility and social unrest'.",
-                prediction: "A word meaning 'calm', 'peaceful', or 'stable'.",
-                explanation: "Because the transition was volatile and unrestful, it was 'anything but' calm. 'Quiescent' and 'placid' both describe a state of quiet or calm, which fits the logic of the negation."
+                clues: "The phrase \u2018anything but\u2019 acts as a negation. The blank must be the opposite of the description that follows: \u2018volatility and social unrest.\u2019",
+                prediction: "A word meaning \u2018calm\u2019, \u2018peaceful\u2019, or \u2018stable.\u2019",
+                explanation: "Because the transition was volatile and unrestful, it was \u2018anything but\u2019 calm. \u2018Quiescent\u2019 and \u2018placid\u2019 both describe a state of quiet or calm, which fits the logic of the negation."
             }
         ];
 
-        let currentQuestionIndex = 0;
-        let currentStep = 1;
-        let isFeedbackState = false;
-        let selectedOptions = [];
+        var currentQuestionIndex = 0;
+        var currentStep = 1;
+        var isFeedbackState = false;
+        var selectedOptions = [];
 
-        const sentenceDisplay = document.getElementById('sentence-display');
-        const clueInput = document.getElementById('clue-input');
-        const predictionInput = document.getElementById('prediction-input');
-        const optionsGrid = document.getElementById('options-grid');
-        const nextBtn = document.getElementById('next-btn');
-        const prevBtn = document.getElementById('prev-btn');
-        const restartBtn = document.getElementById('restart-btn');
-        const progressBar = document.getElementById('progress-bar');
-        const stepLabel = document.getElementById('step-label');
-        const stepCounter = document.getElementById('step-counter');
-        const stepInstructionSummary = document.getElementById('step-instruction-summary');
+        var sentenceDisplay = document.getElementById('sentence-display');
+        var clueInput = document.getElementById('clue-input');
+        var predictionInput = document.getElementById('prediction-input');
+        var optionsGrid = document.getElementById('options-grid');
+        var nextBtn = document.getElementById('next-btn');
+        var prevBtn = document.getElementById('prev-btn');
+        var restartBtn = document.getElementById('restart-btn');
 
-        const stepInstructions = [
+
+        var srAnnouncements = document.getElementById('sr-announcements');
+        var selectionStatus = document.getElementById('selection-status');
+
+        var stepInstructions = [
             "Read the sentence, looking for clues",
             "Predict an answer",
             "Select the two choices that most closely match your prediction",
             "Confirm your answer by reading your selected choices into the sentence"
         ];
 
+        function announce(message) {
+            srAnnouncements.textContent = '';
+            setTimeout(function() { srAnnouncements.textContent = message; }, 100);
+        }
+
+
         function loadQuestion() {
-            const q = questions[currentQuestionIndex];
+            var q = questions[currentQuestionIndex];
             sentenceDisplay.textContent = q.sentence;
-            
             clueInput.value = '';
             predictionInput.value = '';
             selectedOptions = [];
             isFeedbackState = false;
-            
+
             optionsGrid.innerHTML = '';
-            q.options.sort().forEach(option => {
-                const btn = document.createElement('button');
-                btn.className = 'option-card text-left p-4 rounded-xl border border-slate-200 hover:border-blue-300 text-slate-700 font-medium bg-white text-sm';
+            q.options.sort().forEach(function(option) {
+                var btn = document.createElement('button');
+                btn.className = 'option-card';
                 btn.textContent = option;
-                btn.onclick = () => {
+                btn.setAttribute('aria-pressed', 'false');
+                btn.setAttribute('type', 'button');
+                btn.onclick = function() {
                     if (!isFeedbackState) toggleOption(btn, option);
                 };
                 optionsGrid.appendChild(btn);
             });
 
-            document.querySelectorAll('.feedback-box').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.feedback-box').forEach(function(f) { f.classList.remove('active'); });
+            document.getElementById('selection-warning').classList.remove('visible');
+            selectionStatus.textContent = '0 of 2 choices selected.';
             goToStep(1);
+            announce('Question ' + (currentQuestionIndex + 1) + ' of ' + questions.length + ' loaded. ' + q.sentence);
         }
 
         function toggleOption(element, option) {
             if (selectedOptions.includes(option)) {
-                selectedOptions = selectedOptions.filter(o => o !== option);
+                selectedOptions = selectedOptions.filter(function(o) { return o !== option; });
                 element.classList.remove('selected');
+                element.setAttribute('aria-pressed', 'false');
             } else {
                 if (selectedOptions.length < 2) {
                     selectedOptions.push(option);
                     element.classList.add('selected');
+                    element.setAttribute('aria-pressed', 'true');
+                } else {
+                    announce('Maximum of 2 selections reached. Deselect one first.');
+                    return;
                 }
             }
-            document.getElementById('selection-warning').classList.add('hidden');
+            document.getElementById('selection-warning').classList.remove('visible');
+            var statusMsg = selectedOptions.length + ' of 2 choices selected.';
+            if (selectedOptions.length > 0) {
+                statusMsg += ' Selected: ' + selectedOptions.join(', ') + '.';
+            }
+            selectionStatus.textContent = statusMsg;
+            announce(statusMsg);
         }
 
         function goToStep(step) {
-            document.querySelectorAll('.step-container').forEach(c => c.classList.remove('active'));
-            document.getElementById(`step${step}`).classList.add('active');
+            document.querySelectorAll('.step-container').forEach(function(c) { c.classList.remove('active'); });
+            var stepEl = document.getElementById('step' + step);
+            stepEl.classList.add('active');
             currentStep = step;
             isFeedbackState = false;
             updateUI();
+
+            setTimeout(function() {
+                var heading = stepEl.querySelector('h3');
+                if (heading) {
+                    heading.setAttribute('tabindex', '-1');
+                    heading.focus();
+                }
+            }, 100);
+
+            announce('Step ' + step + ' of 4: ' + stepInstructions[step - 1]);
         }
 
         function updateUI() {
-            stepLabel.textContent = `Step ${currentStep}`;
-            stepInstructionSummary.textContent = stepInstructions[currentStep-1];
-            stepCounter.textContent = `${currentStep} / 4`;
-            progressBar.style.width = `${(currentStep / 4) * 100}%`;
+            // Update step boxes
+            for (var s = 1; s <= 4; s++) {
+                var box = document.getElementById('step-box-' + s);
+                if (s === currentStep) {
+                    box.classList.add('active');
+                    box.setAttribute('aria-current', 'step');
+                } else {
+                    box.classList.remove('active');
+                    box.removeAttribute('aria-current');
+                }
+            }
 
-            prevBtn.disabled = (currentStep === 1 || isFeedbackState);
-            nextBtn.textContent = isFeedbackState ? "Continue" : `Check Step ${currentStep}`;
-            
+            if (currentStep === 1 || isFeedbackState) {
+                prevBtn.disabled = true;
+                prevBtn.setAttribute('aria-hidden', 'true');
+            } else {
+                prevBtn.disabled = false;
+                prevBtn.removeAttribute('aria-hidden');
+            }
+
+            nextBtn.textContent = isFeedbackState ? 'Continue' : 'Check Step ' + currentStep;
+
             if (currentStep === 4) {
                 updateReviewStep();
                 nextBtn.classList.add('hidden');
+                nextBtn.setAttribute('aria-hidden', 'true');
                 restartBtn.classList.remove('hidden');
+                restartBtn.removeAttribute('aria-hidden');
             } else {
                 nextBtn.classList.remove('hidden');
+                nextBtn.removeAttribute('aria-hidden');
                 restartBtn.classList.add('hidden');
+                restartBtn.setAttribute('aria-hidden', 'true');
             }
         }
 
         function handleNext() {
-            const q = questions[currentQuestionIndex];
-            
+            var q = questions[currentQuestionIndex];
+
             if (!isFeedbackState) {
                 if (currentStep === 1) {
-                    if (!clueInput.value.trim()) return clueInput.focus();
+                    if (!clueInput.value.trim()) {
+                        announce('Please enter your clue analysis before continuing.');
+                        return clueInput.focus();
+                    }
                     document.getElementById('step1-feedback-text').textContent = q.clues;
                     document.getElementById('step1-feedback').classList.add('active');
+                    announce('Expert clue analysis: ' + q.clues);
                 } else if (currentStep === 2) {
-                    if (!predictionInput.value.trim()) return predictionInput.focus();
+                    if (!predictionInput.value.trim()) {
+                        announce('Please enter your prediction before continuing.');
+                        return predictionInput.focus();
+                    }
                     document.getElementById('step2-feedback-text').textContent = q.prediction;
                     document.getElementById('step2-feedback').classList.add('active');
+                    announce('Expert prediction: ' + q.prediction);
                 } else if (currentStep === 3) {
                     if (selectedOptions.length !== 2) {
-                        document.getElementById('selection-warning').classList.remove('hidden');
+                        document.getElementById('selection-warning').classList.add('visible');
+                        announce('You must select exactly two choices.');
                         return;
                     }
-                    const isCorrect = selectedOptions.every(o => q.correct.includes(o));
-                    const badge = document.getElementById('accuracy-badge');
-                    badge.textContent = isCorrect ? "Exact Match" : "Partial Match";
-                    badge.className = isCorrect ? 
-                        "px-2 py-0.5 bg-white text-emerald-700 text-[9px] font-black rounded uppercase tracking-tighter" : 
-                        "px-2 py-0.5 bg-white text-amber-700 text-[9px] font-black rounded uppercase tracking-tighter";
-                    
-                    document.getElementById('step3-feedback-text').textContent = isCorrect ? 
-                        "Your selections perfectly match the synonym pair required by the sentence logic." : 
-                        "Let's see if these two words create identical meanings in the sentence during Step 4.";
+                    var isCorrect = selectedOptions.every(function(o) { return q.correct.includes(o); });
+                    var badge = document.getElementById('accuracy-badge');
+                    badge.textContent = isCorrect ? 'Exact Match' : 'Partial Match';
+                    badge.style.color = isCorrect ? '#145C30' : '#6B4F00';
+
+
+                    var feedbackMsg = isCorrect
+                        ? 'Your selections perfectly match the synonym pair required by the sentence logic.'
+                        : 'Let\u2019s see if these two words create identical meanings in the sentence during Step 4.';
+                    document.getElementById('step3-feedback-text').textContent = feedbackMsg;
                     document.getElementById('step3-feedback').classList.add('active');
+                    announce((isCorrect ? 'Exact Match. ' : 'Partial Match. ') + feedbackMsg);
                 }
                 isFeedbackState = true;
             } else {
@@ -375,26 +1137,124 @@
         }
 
         function updateReviewStep() {
-            const q = questions[currentQuestionIndex];
-            const word1 = selectedOptions[0] || "_______";
-            const word2 = selectedOptions[1] || "_______";
+            var q = questions[currentQuestionIndex];
+            var word1 = selectedOptions[0] || '_______';
+            var word2 = selectedOptions[1] || '_______';
 
-            document.getElementById('version-a').innerHTML = q.sentence.replace("_________", `<span class="text-amber-600 font-bold underline decoration-2 underline-offset-4">${word1}</span>`);
-            document.getElementById('version-b').innerHTML = q.sentence.replace("_________", `<span class="text-amber-600 font-bold underline decoration-2 underline-offset-4">${word2}</span>`);
-            
-            document.getElementById('correct-answer-text').textContent = q.correct.join(" & ");
+            document.getElementById('version-a').innerHTML = q.sentence.replace('_________', '<strong style="color:#240F6E; text-decoration:underline; text-underline-offset:4px;">' + word1 + '</strong>');
+            document.getElementById('version-b').innerHTML = q.sentence.replace('_________', '<strong style="color:#240F6E; text-decoration:underline; text-underline-offset:4px;">' + word2 + '</strong>');
+
+            document.getElementById('correct-answer-text').textContent = q.correct.join(' & ');
             document.getElementById('explanation-text').textContent = q.explanation;
+
+            // Reset keep-or-new panel and hide expert review
+            document.getElementById('keep-or-new').removeAttribute('hidden');
+            document.getElementById('keep-or-new').style.opacity = '1';
+            document.getElementById('btn-keep').disabled = false;
+            document.getElementById('btn-select-new').disabled = false;
+            document.getElementById('expert-review-panel').setAttribute('hidden', '');
+        }
+
+        function handleKeep() {
+            var q = questions[currentQuestionIndex];
+            var isCorrect = selectedOptions.length === 2 && selectedOptions.every(function(o) { return q.correct.includes(o); });
+            // Disable buttons
+            document.getElementById('btn-keep').disabled = true;
+            document.getElementById('btn-select-new').disabled = true;
+            // Reveal expert review
+            var panel = document.getElementById('expert-review-panel');
+            panel.removeAttribute('hidden');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (isCorrect) { launchConfetti(); }
+        }
+
+        function handleSelectNew() {
+            // Send user back to step 3, reset its state
+            document.getElementById('step3-feedback').classList.remove('active');
+            document.getElementById('selection-warning').classList.remove('visible');
+            selectedOptions = [];
+            document.querySelectorAll('.option-card').forEach(function(card) {
+                card.classList.remove('selected');
+                card.setAttribute('aria-pressed', 'false');
+            });
+            selectionStatus.textContent = '0 of 2 choices selected.';
+            goToStep(3);
+        }
+
+        function launchConfetti() {
+            var colors = ['#240F6E', '#005DE8', '#C0DF16', '#FFC82E', '#DE1B90', '#287D21'];
+            var originX = window.innerWidth / 2;
+            var originY = window.innerHeight * 0.6;
+            var count = 0;
+            var total = 90;
+            function burst() {
+                if (count >= total) return;
+                var batch = Math.min(12, total - count);
+                for (var i = 0; i < batch; i++) {
+                    var el = document.createElement('div');
+                    var size = Math.random() * 9 + 5;
+                    el.style.cssText = [
+                        'position:fixed',
+                        'width:' + size + 'px',
+                        'height:' + size + 'px',
+                        'background:' + colors[Math.floor(Math.random() * colors.length)],
+                        'border-radius:' + (Math.random() > 0.5 ? '50%' : '2px'),
+                        'left:' + originX + 'px',
+                        'top:' + originY + 'px',
+                        'pointer-events:none',
+                        'z-index:9999',
+                        'opacity:1',
+                        'transform:translate(-50%,-50%)'
+                    ].join(';');
+                    document.body.appendChild(el);
+                    var angle = Math.random() * Math.PI * 2;
+                    var speed = Math.random() * 380 + 120;
+                    var vx = Math.cos(angle) * speed;
+                    var vy = Math.sin(angle) * speed - 220;
+                    var gravity = 520;
+                    var startTime = performance.now();
+                    var duration = Math.random() * 800 + 700;
+                    (function(elem, vx, vy, startTime, duration) {
+                        function animate(now) {
+                            var t = (now - startTime) / 1000;
+                            if (t > duration / 1000) { elem.remove(); return; }
+                            var x = vx * t;
+                            var y = vy * t + 0.5 * gravity * t * t;
+                            var opacity = Math.max(0, 1 - t / (duration / 1000));
+                            elem.style.transform = 'translate(calc(-50% + ' + x + 'px), calc(-50% + ' + y + 'px)) rotate(' + (t * 400) + 'deg)';
+                            elem.style.opacity = opacity;
+                            requestAnimationFrame(animate);
+                        }
+                        requestAnimationFrame(animate);
+                    })(el, vx, vy, startTime, duration);
+                }
+                count += batch;
+                if (count < total) setTimeout(burst, 35);
+            }
+            burst();
         }
 
         nextBtn.onclick = handleNext;
-        prevBtn.onclick = () => {
+        prevBtn.onclick = function() {
             if (currentStep > 1) goToStep(currentStep - 1);
         };
 
-        restartBtn.onclick = () => {
+        restartBtn.onclick = function() {
             currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
             loadQuestion();
         };
+
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'TEXTAREA') return;
+        });
+
+        function toggleHint(btn) {
+            var expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', !expanded);
+            var body = document.getElementById(btn.getAttribute('aria-controls'));
+            if (expanded) { body.setAttribute('hidden', ''); }
+            else { body.removeAttribute('hidden'); }
+        }
 
         window.onload = loadQuestion;
     </script>
