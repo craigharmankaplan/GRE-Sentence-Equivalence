@@ -1,0 +1,17 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Serve sentequiv.html at the site root
+[[redirects]]
+  from = "/"
+  to = "/sentequiv.html"
+  status = 200
+
+# Reasonable security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
