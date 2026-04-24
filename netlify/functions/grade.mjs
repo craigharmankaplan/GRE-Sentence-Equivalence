@@ -80,15 +80,37 @@ export default async (req) => {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) return json({ error: 'Empty Gemini response' }, 502);
 
-    let parsed;
-    try {
-        parsed = JSON.parse(text);
-    } catch {
+    const parsed = tryParseJson(text);
+    if (!parsed) {
+        console.error('[grade] Gemini returned non-JSON text:', text.slice(0, 800));
         return json({ error: 'Gemini returned non-JSON text', text: text.slice(0, 500) }, 502);
     }
 
     return json(parsed, 200);
 };
+
+// Defensive JSON parser: handles Gemini's occasional markdown-fenced or
+// preamble-wrapped responses even when responseMimeType is set to application/json.
+function tryParseJson(raw) {
+    // 1. Straight parse
+    try { return JSON.parse(raw); } catch {}
+
+    let s = String(raw).trim();
+
+    // 2. Strip markdown code fences (```json ... ``` or ``` ... ```)
+    s = s.replace(/^```(?:json|JSON)?\s*\n?/, '').replace(/\n?\s*```\s*$/, '').trim();
+    try { return JSON.parse(s); } catch {}
+
+    // 3. Extract substring from first { to last } (handles preamble/postamble)
+    const first = s.indexOf('{');
+    const last = s.lastIndexOf('}');
+    if (first !== -1 && last > first) {
+        const candidate = s.substring(first, last + 1);
+        try { return JSON.parse(candidate); } catch {}
+    }
+
+    return null;
+}
 
 function json(body, status = 200) {
     return new Response(JSON.stringify(body), {
