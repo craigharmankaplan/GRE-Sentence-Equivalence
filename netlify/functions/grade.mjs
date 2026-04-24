@@ -48,8 +48,8 @@ export default async (req) => {
                 generationConfig: {
                     responseMimeType: 'application/json',
                     responseSchema: schema,
-                    temperature: 0.3,
-                    maxOutputTokens: 250
+                    temperature: 0.2,
+                    maxOutputTokens: 1000
                 }
             }),
             signal: controller.signal
@@ -77,13 +77,23 @@ export default async (req) => {
         return json({ error: 'Invalid Gemini response (not JSON)' }, 502);
     }
 
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) return json({ error: 'Empty Gemini response' }, 502);
+    const candidate = data?.candidates?.[0];
+    const finishReason = candidate?.finishReason || 'UNKNOWN';
+    const text = candidate?.content?.parts?.[0]?.text;
+
+    if (!text) {
+        console.error('[grade] Empty Gemini response. finishReason=' + finishReason, JSON.stringify(data).slice(0, 500));
+        return json({ error: 'Empty Gemini response', finishReason }, 502);
+    }
 
     const parsed = tryParseJson(text);
     if (!parsed) {
-        console.error('[grade] Gemini returned non-JSON text:', text.slice(0, 800));
-        return json({ error: 'Gemini returned non-JSON text', text: text.slice(0, 500) }, 502);
+        console.error('[grade] Non-JSON Gemini text. finishReason=' + finishReason + ' text=' + text.slice(0, 500));
+        return json({
+            error: 'Gemini returned non-JSON text',
+            finishReason,
+            text: text.slice(0, 500)
+        }, 502);
     }
 
     return json(parsed, 200);
@@ -127,10 +137,11 @@ function buildPromptAndSchema(step, sentence, rubric, studentInput) {
             `EXPECTED PIVOT (structural signal word): "${rubric.pivot || ''}"\n` +
             `EXPECTED KEY CLUE (descriptive phrase that defines the blank): "${rubric.keyClue || ''}"\n\n` +
             `STUDENT ANALYSIS: "${studentInput}"\n\n` +
-            'Evaluate leniently — accept synonyms and paraphrases. Respond with JSON containing:\n' +
-            '- pivotFound: did they identify the pivot (or equivalent)?\n' +
-            '- clueFound: did they identify the key clue (or equivalent phrase)?\n' +
-            '- nudge: ONE short coaching sentence (max 22 words) addressed to "you". Be specific about what they got and what to push for. Don\'t reveal the answer.';
+            'Evaluate leniently — accept synonyms and paraphrases.\n\n' +
+            'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
+            '- pivotFound (boolean): did the student identify the pivot (or equivalent)?\n' +
+            '- clueFound (boolean): did the student identify the key clue (or equivalent phrase)?\n' +
+            '- nudge (string, 22 words max): one coaching sentence addressed to "you". Be specific about what they got and what to push for. Do not reveal the answer.';
         const schema = {
             type: 'object',
             properties: {
@@ -150,9 +161,10 @@ function buildPromptAndSchema(step, sentence, rubric, studentInput) {
         `SENTENCE: "${sentence}"\n` +
         `TARGET MEANINGS (any word with a similar meaning is correct): ${JSON.stringify(targetMeanings)}\n\n` +
         `STUDENT PREDICTION: "${studentInput}"\n\n` +
-        'Evaluate leniently — the student\'s prediction just needs to be semantically close to one of the target meanings. Respond with JSON:\n' +
-        '- meaningMatch: does their prediction match the required meaning?\n' +
-        '- nudge: ONE short coaching sentence (max 22 words) addressed to "you". If correct, affirm briefly. If off, hint at the direction without revealing the answer.';
+        'Evaluate leniently — the prediction just needs to be semantically close to one of the target meanings.\n\n' +
+        'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
+        '- meaningMatch (boolean): does the prediction match the required meaning?\n' +
+        '- nudge (string, 22 words max): one coaching sentence addressed to "you". If correct, affirm briefly. If off, hint at the direction without revealing the answer.';
     const schema = {
         type: 'object',
         properties: {
