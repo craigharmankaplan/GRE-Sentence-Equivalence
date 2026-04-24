@@ -865,9 +865,11 @@
             var card = document.getElementById('step' + step + '-ai-coach');
             var body = document.getElementById('step' + step + '-ai-coach-body');
             var indicators = document.getElementById('step' + step + '-ai-coach-indicators');
+            var words = document.getElementById('step' + step + '-ai-coach-words');
             body.className = 'ai-coach-body loading';
             body.innerHTML = 'Reviewing your answer<span class="ai-coach-loading-dots"></span>';
-            indicators.innerHTML = '';
+            if (indicators) indicators.innerHTML = '';
+            if (words) words.innerHTML = '';
             card.classList.add('visible');
         }
         function showCoachResult(step, nudge, indicators) {
@@ -876,13 +878,15 @@
             var indEl = document.getElementById('step' + step + '-ai-coach-indicators');
             body.className = 'ai-coach-body';
             body.textContent = nudge;
-            indEl.innerHTML = '';
-            (indicators || []).forEach(function(ind) {
-                var pill = document.createElement('span');
-                pill.className = 'ai-match-pill ' + (ind.found ? 'found' : 'missed');
-                pill.textContent = (ind.found ? '\u2713 ' : '\u2717 ') + ind.label;
-                indEl.appendChild(pill);
-            });
+            if (indEl) {
+                indEl.innerHTML = '';
+                (indicators || []).forEach(function(ind) {
+                    var pill = document.createElement('span');
+                    pill.className = 'ai-match-pill ' + (ind.found ? 'found' : 'missed');
+                    pill.textContent = (ind.found ? '\u2713 ' : '\u2717 ') + ind.label;
+                    indEl.appendChild(pill);
+                });
+            }
             card.classList.add('visible');
         }
         function hideCoach(step) {
