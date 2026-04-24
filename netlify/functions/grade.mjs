@@ -1,233 +1,1959 @@
-// netlify/functions/grade.js
-// Server-side proxy for Gemini grading. Keeps GEMINI_API_KEY off the client.
-// Runs on Netlify Functions 2.0 (Node 20, Web standard Request/Response).
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRE Sentence Equivalence Scaffolder — Kaplan Method</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :focus { outline: none; }
+        :focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        :root {
+            --kaplan-purple: #240F6E;
+            --kaplan-purple-shade1: #503F8B;
+            --kaplan-purple-shade2: #7C6CA7;
+            --kaplan-purple-shade3: #A79FC5;
+            --kaplan-purple-dark: #503F8B;
+            --kaplan-blue: #005DE8;
+            --kaplan-green: #287D21;
+            --kaplan-chartreuse: #C0DF16;
+            --kaplan-yellow: #FFC82E;
+            --kaplan-red: #D6083B;
+            --kaplan-pink: #DE1B90;
+            --kaplan-charcoal: #2D2D2D;
+            --kaplan-slate: #6B7280;
+            --kaplan-border: #E5E7EB;
+            --kaplan-bg: #F9FAFB;
+            --kaplan-white: #FFFFFF;
+            --text-on-purple-bg: #1E0B56;
+            --text-on-blue-bg: #003A92;
+            --text-on-green-bg: #145C30;
+            --text-on-yellow-bg: #6B4F00;
+            --focus-ring: 2px solid var(--kaplan-blue);
+            --focus-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+        body { font-family: 'Open Sans', 'Arial', sans-serif; background-color: var(--kaplan-bg); color: var(--kaplan-charcoal); min-height: 100vh; line-height: 1.6; font-size: 16px; }
+        h1, h2, h3, h4, .headline { font-family: 'Merriweather', 'Georgia', serif; }
+        .mono { font-family: 'Open Sans', 'Arial', monospace; }
+        button { font-family: 'Open Sans', 'Arial', sans-serif; }
+        .page-wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
+        a.sr-only:focus { position: absolute; width: auto; height: auto; padding: 8px 16px; margin: 0; overflow: visible; clip: auto; white-space: normal; z-index: 100; top: 8px; left: 8px; background: var(--kaplan-white); color: var(--kaplan-purple); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-weight: 600; text-decoration: none; }
+        .page-header { text-align: center; margin-bottom: 32px; }
+        .page-header h1 { font-size: 16px; font-weight: 300; color: var(--kaplan-purple); line-height: 1.3; letter-spacing: -0.01em; }
+        .page-header .subtitle { margin-top: 8px; font-size: 16px; font-weight: 500; color: var(--kaplan-slate); }
+        .swoosh-center { display: flex; justify-content: center; margin-top: 12px; }
+        .kaplan-card { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .progress-stepper { padding: 16px 20px; margin-bottom: 32px; }
+        .step-boxes { display: flex; gap: 8px; align-items: center; }
+        .step-box { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; border: 2px solid #9CA3AF; background: var(--kaplan-white); font-family: 'Open Sans', 'Arial', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kaplan-charcoal); transition: all 0.3s ease; transform: scale(0.92); opacity: 0.75; cursor: default; user-select: none; }
+        .step-box.active { background: var(--kaplan-blue); border-color: var(--kaplan-blue); color: #FFFFFF; transform: scale(1); opacity: 1; box-shadow: 0 4px 12px rgba(0,93,232,0.35); font-size: 15px; font-weight: 800; letter-spacing: 0.18em; text-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+        .workspace { border-radius: 20px; box-shadow: 0 8px 30px rgba(36,15,110,0.08); overflow: hidden; min-height: 550px; display: flex; flex-direction: column; }
+        .question-header { padding: 32px; background: var(--kaplan-purple); position: relative; overflow: hidden; }
+        .question-header::before { content: ''; position: absolute; width: 140%; height: 300px; border-radius: 50%; border-top: 3px solid rgba(255,255,255,0.12); left: -20%; bottom: -180px; pointer-events: none; }
+        .question-header .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.85); margin-bottom: 16px; }
+        .question-header .sentence { font-size: 20px; line-height: 1.6; color: var(--kaplan-white); font-family: 'Open Sans', 'Arial', sans-serif; }
+        .steps-area { padding: 32px; flex-grow: 1; }
+        .step-container { display: none; }
+        .step-container.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .step-info { display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
+        .step-info .icon { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+        .step-info .icon svg { width: 16px; height: 16px; color: white; }
+        .step-info h3 { font-size: 16px; font-weight: 700; }
+        .step-info p { font-size: 16px; margin-top: 4px; line-height: 1.6; }
+        .step-info.purple { background: #F0EDFA; border: 1px solid #DDD6F3; }
+        .step-info.purple .icon { background: var(--kaplan-purple); }
+        .step-info.purple h3 { color: var(--kaplan-purple); }
+        .step-info.purple p { color: var(--text-on-purple-bg); }
+        .step-info.teal { background: #E8EFFE; border: 1px solid #B3C9F8; }
+        .step-info.teal .icon { background: var(--kaplan-blue); }
+        .step-info.teal h3 { color: var(--text-on-blue-bg); }
+        .step-info.teal p { color: var(--text-on-blue-bg); }
+        .step-info.green { background: #EAFAF1; border: 1px solid #B6ECC9; }
+        .step-info.green .icon { background: var(--kaplan-green); }
+        .step-info.green h3 { color: var(--text-on-green-bg); }
+        .step-info.green p { color: var(--text-on-green-bg); }
+        .step-info.gold { background: #FFF8EB; border: 1px solid #F5DCA0; }
+        .step-info.gold .icon { background: var(--kaplan-yellow); }
+        .step-info.gold h3 { color: var(--text-on-yellow-bg); }
+        .step-info.gold p { color: var(--text-on-yellow-bg); }
+        .field-label { display: block; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--kaplan-charcoal); margin-bottom: 8px; }
+        textarea, input[type="text"] { font-family: 'Open Sans', 'Arial', sans-serif; width: 100%; padding: 16px; font-size: 16px; border: 2px solid var(--kaplan-border); border-radius: 12px; background: var(--kaplan-bg); outline: none; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; color: var(--kaplan-charcoal); }
+        textarea:focus-visible, input[type="text"]:focus-visible { border-color: var(--kaplan-purple); background: var(--kaplan-white); box-shadow: 0 0 0 3px rgba(36,15,110,0.15); }
+        textarea { height: 112px; resize: vertical; }
+        textarea::placeholder, input[type="text"]::placeholder { color: #687482; }
+        .stack > * + * { margin-top: 20px; }
+        .stack-lg > * + * { margin-top: 24px; }
+        .feedback-box { display: none; padding: 20px; border-radius: 16px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.12); animation: slideIn 0.3s ease-out; }
+        .feedback-box.active { display: block; }
+        .feedback-box h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.9); margin-bottom: 8px; }
+        .feedback-box p { font-size: 16px; line-height: 1.6; font-weight: 500; }
+        .feedback-purple { background: var(--kaplan-purple); }
+        .feedback-teal { background: #0047B3; }
+        .feedback-green { background: #1B6B17; }
+        @keyframes slideIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; border: none; padding: 0; margin: 0; }
+        .options-grid legend { font-size: 16px; font-weight: 600; color: var(--kaplan-charcoal); margin-bottom: 12px; padding: 0; }
+        @media (min-width: 640px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+        .option-card { text-align: left; padding: 16px; font-size: 16px; font-weight: 500; color: var(--kaplan-charcoal); border: 2px solid var(--kaplan-border); border-radius: 12px; background: var(--kaplan-white); cursor: pointer; min-height: 44px; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; }
+        .option-card:hover { border-color: var(--kaplan-blue); box-shadow: 0 2px 8px rgba(0,93,232,0.10); }
+        .option-card.selected { border-color: var(--kaplan-purple); background: #F0EDFA; box-shadow: 0 0 0 2px var(--kaplan-purple); }
+        .option-card:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .selection-warning { display: none; font-size: 16px; font-weight: 700; padding: 12px; border-radius: 8px; text-align: center; background: #FDECEB; color: #B91C1C; border: 2px solid #F5C6C0; }
+        .selection-warning.visible { display: block; }
+        .accuracy-badge { display: inline-block; padding: 2px 8px; background: white; font-size: 12px; font-weight: 900; border-radius: 4px; text-transform: uppercase; letter-spacing: -0.02em; }
+        .feedback-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .expert-review { background: var(--kaplan-purple-shade1); border-radius: 16px; color: white; padding: 28px; margin-top: 24px; box-shadow: 0 8px 24px rgba(80,63,139,0.3); }
+        .expert-review h3 { font-size: 20px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+        .expert-review .review-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.25em; color: var(--kaplan-chartreuse); display: block; margin-bottom: 4px; }
+        .expert-review .correct-pair { font-size: 20px; font-weight: 700; font-family: 'Open Sans', 'Arial', sans-serif; color: white; }
+        .expert-review .explanation { margin-top: 8px; line-height: 1.6; font-size: 16px; color: rgba(255,255,255,0.9); }
+        .review-sections > * + * { margin-top: 20px; }
+        .controls { padding: 32px; background: var(--kaplan-bg); border-top: 1px solid var(--kaplan-border); display: flex; justify-content: space-between; align-items: center; }
+        .btn-back { padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 16px; color: var(--kaplan-slate); background: none; border: none; cursor: pointer; transition: color 0.2s; min-height: 44px; }
+        .btn-back:hover { color: var(--kaplan-charcoal); }
+        .btn-back:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .btn-back:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+        .btn-primary { background: var(--kaplan-purple); color: var(--kaplan-white); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 16px; padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 12px rgba(36,15,110,0.20); min-height: 44px; }
+        .btn-primary:hover { background: var(--kaplan-purple-shade1); }
+        .btn-primary:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-teal { background: var(--kaplan-blue); color: var(--kaplan-white); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 16px; padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 12px rgba(0,93,232,0.20); min-height: 44px; }
+        .btn-teal:hover { background: #0047B3; }
+        .btn-teal:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .btn-teal:active { transform: scale(0.97); }
+        .hidden { display: none; }
+        @media (min-width: 768px) { .page-header h1 { font-size: 19px; } }
+        .collapsible-hint { padding: 0; }
+        .hint-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding: 20px; text-align: left; gap: 12px; border-radius: 16px; }
+        .hint-toggle h3 { font-size: 16px; font-weight: 700; color: var(--kaplan-purple); margin: 0; flex: 1; }
+        .hint-toggle.teal h3  { color: var(--text-on-blue-bg); }
+        .hint-toggle.green h3 { color: var(--text-on-green-bg); }
+        .hint-toggle.gold h3  { color: var(--text-on-yellow-bg); }
+        .hint-toggle:focus { outline: none; }
+        .hint-toggle:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-radius: 16px; }
+        .hint-icon-wrap { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--kaplan-purple); display: flex; align-items: center; justify-content: center; color: white; }
+        .hint-toggle.teal  .hint-icon-wrap { background: var(--kaplan-blue); }
+        .hint-toggle.green .hint-icon-wrap { background: var(--kaplan-green); }
+        .hint-toggle.gold  .hint-icon-wrap { background: var(--kaplan-yellow); }
+        .hint-chevron { flex-shrink: 0; color: var(--kaplan-purple); transition: transform 0.25s ease; }
+        .hint-toggle.teal  .hint-chevron { color: var(--text-on-blue-bg); }
+        .hint-toggle.green .hint-chevron { color: var(--text-on-green-bg); }
+        .hint-toggle.gold  .hint-chevron { color: var(--text-on-yellow-bg); }
+        .hint-toggle[aria-expanded="true"] .hint-chevron { transform: rotate(180deg); }
+        .hint-body { padding: 0 20px 20px; }
+        .hint-body p { font-size: 16px; color: var(--text-on-purple-bg); line-height: 1.6; margin: 0; }
+        .step-info.teal .hint-body p  { color: var(--text-on-blue-bg); }
+        .step-info.green .hint-body p { color: var(--text-on-green-bg); }
+        .step-info.gold .hint-body p  { color: var(--text-on-yellow-bg); }
+        .keep-or-new-panel { background: #F0EDFA; border: 1px solid #DDD6F3; border-radius: 16px; padding: 24px; text-align: center; }
+        .keep-or-new-question { font-size: 16px; font-weight: 600; color: var(--kaplan-purple); margin-bottom: 20px; line-height: 1.5; }
+        .keep-or-new-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-keep { background: var(--kaplan-purple); color: var(--kaplan-white); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 15px; padding: 12px 36px; border-radius: 8px; border: none; cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s; min-height: 44px; }
+        .btn-keep:hover { background: var(--kaplan-purple-shade1); }
+        .btn-keep:disabled { opacity: 0.5; cursor: default; }
+        .btn-select-new { background: transparent; color: var(--kaplan-purple); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 15px; padding: 12px 36px; border-radius: 8px; border: 2px solid var(--kaplan-purple); cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s, color 0.2s; min-height: 44px; }
+        .btn-select-new:hover { background: var(--kaplan-purple); color: var(--kaplan-white); }
+        .btn-select-new:disabled { opacity: 0.5; cursor: default; }
+        .completion-screen { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 20px; box-shadow: 0 8px 30px rgba(36,15,110,0.08); overflow: hidden; animation: fadeIn 0.5s ease-out; }
+        .completion-hero { background: var(--kaplan-purple); padding: 48px 32px 40px; text-align: center; position: relative; overflow: hidden; }
+        .completion-hero::before { content: ''; position: absolute; width: 140%; height: 300px; border-radius: 50%; border-top: 3px solid rgba(255,255,255,0.12); left: -20%; bottom: -180px; pointer-events: none; }
+        .completion-icon { width: 72px; height: 72px; background: var(--kaplan-chartreuse); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 0 0 12px rgba(192,223,22,0.2); }
+        .completion-icon svg { width: 36px; height: 36px; color: var(--kaplan-purple); }
+        .completion-hero h2 { font-size: 26px; font-weight: 900; color: var(--kaplan-white); line-height: 1.3; margin-bottom: 8px; }
+        .completion-hero p { font-size: 16px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+        .completion-body { padding: 36px 32px 40px; }
+        .completion-body > * + * { margin-top: 24px; }
+        .completion-message { font-size: 17px; line-height: 1.75; color: var(--kaplan-charcoal); }
+        .completion-steps-reminder { background: #F0EDFA; border: 1px solid #DDD6F3; border-radius: 16px; padding: 24px; }
+        .completion-steps-reminder h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--kaplan-purple); margin-bottom: 16px; }
+        .method-steps-list { list-style: none; padding: 0; margin: 0; }
+        .method-steps-list li { display: flex; align-items: flex-start; gap: 14px; font-size: 16px; color: var(--text-on-purple-bg); line-height: 1.5; }
+        .method-steps-list li + li { margin-top: 12px; }
+        .method-step-num { flex-shrink: 0; width: 26px; height: 26px; background: var(--kaplan-purple); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-top: 1px; }
 
-const ALLOWED_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-pro']);
-const GEMINI_TIMEOUT_MS = 12000;
+        /* Student-answer panel (Step 1 & 2 side-by-side compare) */
+        /* Step 3 prediction recall (student vs expert) */
+        .prediction-recall { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px; }
+        @media (min-width: 640px) { .prediction-recall { grid-template-columns: 1fr 1fr; } }
+        .prediction-pill { padding: 14px 16px; border-radius: 12px; border: 1px solid transparent; }
+        .prediction-pill.student { background: #FDECEB; border-color: #F5C6C0; }
+        .prediction-pill.expert { background: #E8EFFE; border-color: #B3C9F8; }
+        .prediction-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 6px; }
+        .prediction-pill.student .prediction-label { color: #B91C1C; }
+        .prediction-pill.expert .prediction-label { color: var(--text-on-blue-bg); }
+        .prediction-text { font-size: 15px; line-height: 1.5; color: var(--kaplan-charcoal); margin: 0; }
+        .prediction-pill.student .prediction-text { color: #B91C1C; }
+        .prediction-pill.expert .prediction-text { color: var(--text-on-blue-bg); }
+        .prediction-text:empty::before { content: "(no prediction captured)"; color: #9CA3AF; font-style: italic; }
 
-export default async (req) => {
-    if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+        /* Option-letter badges (A-F) */
+        .option-card { display: flex; align-items: center; gap: 12px; }
+        .option-letter { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: #F0EDFA; color: var(--kaplan-purple); font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; font-family: 'Merriweather', 'Georgia', serif; transition: background 0.2s, color 0.2s; }
+        .option-card.selected .option-letter { background: var(--kaplan-purple); color: var(--kaplan-white); }
+        .option-word { flex: 1; }
 
-    let body;
-    try {
-        body = await req.json();
-    } catch {
-        return json({ error: 'Invalid JSON body' }, 400);
-    }
+        /* Step 4: "Read with" pill toggle */
+        .read-with-panel { padding: 24px; border-radius: 16px; background: var(--kaplan-bg); border: 1px solid var(--kaplan-border); }
+        .word-pill-group { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .word-pill-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; color: var(--kaplan-slate); margin-right: 4px; }
+        .word-pill { padding: 10px 20px; border-radius: 999px; border: 2px solid var(--kaplan-purple); background: var(--kaplan-white); color: var(--kaplan-purple); font-family: 'Open Sans', 'Arial', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s, box-shadow 0.2s; min-height: 40px; }
+        .word-pill:hover { background: #F0EDFA; }
+        .word-pill.active { background: var(--kaplan-purple); color: var(--kaplan-white); box-shadow: 0 2px 10px rgba(36,15,110,0.28); }
+        .word-pill:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .preview-sentence { font-size: 17px; line-height: 1.7; color: var(--kaplan-charcoal); font-family: 'Open Sans', 'Arial', sans-serif; }
+        .preview-sentence .highlighted-word { color: var(--kaplan-purple); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
 
-    const { step, sentence, rubric, studentInput, model,
-            correctPair, selections, clueAnalysis, prediction } = body || {};
+        /* Completion-screen stats */
+        .stats-panel { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 16px; padding: 28px; }
+        .score-headline { text-align: center; padding-bottom: 24px; border-bottom: 1px solid var(--kaplan-border); margin-bottom: 24px; }
+        .score-number { font-family: 'Merriweather', 'Georgia', serif; font-size: 56px; font-weight: 900; color: var(--kaplan-purple); line-height: 1; }
+        .score-denom { font-size: 28px; color: var(--kaplan-slate); font-weight: 400; }
+        .score-label { margin-top: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--kaplan-slate); }
+        .stats-subsection { margin-bottom: 24px; }
+        .stats-subsection:last-child { margin-bottom: 0; }
+        .stats-subsection h3 { font-family: 'Open Sans', 'Arial', sans-serif; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--kaplan-slate); margin-bottom: 12px; }
+        .clue-breakdown { list-style: none; padding: 0; margin: 0; }
+        .clue-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 8px; background: var(--kaplan-bg); margin-bottom: 6px; font-size: 15px; }
+        .clue-row:last-child { margin-bottom: 0; }
+        .clue-row.mastered { background: #EAFAF1; color: var(--text-on-green-bg); }
+        .clue-row.needs-work { background: #FFF8EB; color: var(--text-on-yellow-bg); }
+        .clue-name { font-weight: 600; }
+        .clue-score { font-weight: 800; font-family: 'Merriweather', 'Georgia', serif; font-size: 14px; }
+        .clue-row.mastered .clue-score::before { content: "\2713  "; }
+        .clue-row.needs-work .clue-score::before { content: "\25cb  "; }
+        .takeaway { padding: 20px; border-radius: 14px; background: #F0EDFA; border: 1px solid #DDD6F3; color: var(--text-on-purple-bg); font-size: 15px; line-height: 1.6; }
+        .takeaway strong { color: var(--kaplan-purple); }
 
-    if (![1, 2, 4].includes(step)) return json({ error: 'step must be 1, 2, or 4' }, 400);
-    if (typeof sentence !== 'string' || !sentence.trim()) return json({ error: 'Missing sentence' }, 400);
+        /* Settings cog + modal */
+        .settings-cog { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: var(--kaplan-white); border: 1px solid var(--kaplan-border); color: var(--kaplan-purple); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 100; transition: background 0.2s, transform 0.2s; }
+        .settings-cog:hover { background: var(--kaplan-bg); transform: rotate(30deg); }
+        .settings-cog:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(36,15,110,0.35); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+        .modal-backdrop.active { display: flex; }
+        .modal-card { background: var(--kaplan-white); border-radius: 16px; max-width: 520px; width: 100%; box-shadow: 0 20px 60px rgba(36,15,110,0.25); overflow: hidden; animation: modalIn 0.25s ease-out; }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--kaplan-border); display: flex; justify-content: space-between; align-items: center; background: var(--kaplan-bg); }
+        .modal-header h2 { font-size: 16px; font-weight: 700; color: var(--kaplan-purple); margin: 0; }
+        .modal-close { background: none; border: none; color: var(--kaplan-slate); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .modal-close:hover { background: var(--kaplan-bg); color: var(--kaplan-charcoal); }
+        .modal-close:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .modal-body { padding: 24px; }
+        .modal-body > * + * { margin-top: 20px; }
+        .settings-warning { padding: 12px 14px; border-radius: 10px; background: #FFF8EB; border: 1px solid #F5DCA0; color: var(--text-on-yellow-bg); font-size: 13px; line-height: 1.5; }
+        .settings-field label { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--kaplan-charcoal); margin-bottom: 6px; }
+        .settings-field input, .settings-field select { width: 100%; padding: 12px 14px; font-size: 14px; border: 2px solid var(--kaplan-border); border-radius: 10px; font-family: 'Open Sans', 'Arial', sans-serif; background: var(--kaplan-white); color: var(--kaplan-charcoal); }
+        .settings-field input:focus-visible, .settings-field select:focus-visible { outline: none; border-color: var(--kaplan-purple); box-shadow: 0 0 0 3px rgba(36,15,110,0.15); }
+        .settings-field-help { margin-top: 6px; font-size: 12px; color: var(--kaplan-slate); }
+        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; background: #D1D5DB; border-radius: 999px; cursor: pointer; transition: background 0.2s; border: none; flex-shrink: 0; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .toggle-switch.on { background: var(--kaplan-purple); }
+        .toggle-switch.on::after { transform: translateX(20px); }
+        .toggle-switch:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .settings-action-btn { padding: 10px 16px; border-radius: 8px; font-family: 'Open Sans', 'Arial', sans-serif; font-weight: 700; font-size: 13px; border: 2px solid var(--kaplan-purple); background: var(--kaplan-white); color: var(--kaplan-purple); cursor: pointer; transition: background 0.2s, color 0.2s; min-height: 40px; }
+        .settings-action-btn:hover { background: var(--kaplan-purple); color: var(--kaplan-white); }
+        .settings-action-btn.secondary { border-color: var(--kaplan-slate); color: var(--kaplan-slate); }
+        .settings-action-btn.secondary:hover { background: var(--kaplan-slate); color: var(--kaplan-white); }
+        .settings-action-btn.danger { border-color: var(--kaplan-red); color: var(--kaplan-red); }
+        .settings-action-btn.danger:hover { background: var(--kaplan-red); color: var(--kaplan-white); }
+        .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-    // Per-step validation — step 4 needs a different payload shape
-    if (step === 1 || step === 2) {
-        if (typeof studentInput !== 'string' || !studentInput.trim()) return json({ error: 'Missing studentInput' }, 400);
-        if (!rubric || typeof rubric !== 'object') return json({ error: 'Missing rubric' }, 400);
-    }
-    if (step === 4) {
-        if (!Array.isArray(correctPair) || correctPair.length !== 2) return json({ error: 'correctPair must be a 2-item array' }, 400);
-        if (!Array.isArray(selections) || selections.length !== 2) return json({ error: 'selections must be a 2-item array' }, 400);
-        if (typeof clueAnalysis !== 'string') return json({ error: 'Missing clueAnalysis' }, 400);
-        if (typeof prediction !== 'string') return json({ error: 'Missing prediction' }, 400);
-    }
+        /* AI coach card */
+        .ai-coach-card { display: none; padding: 16px 18px; border-radius: 14px; background: #FFFBEE; border: 1.5px solid #F5DCA0; position: relative; }
+        .ai-coach-card.visible { display: block; animation: slideIn 0.3s ease-out; }
+        .ai-coach-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .ai-coach-icon { width: 22px; height: 22px; border-radius: 50%; background: var(--kaplan-yellow); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .ai-coach-icon svg { width: 13px; height: 13px; color: var(--text-on-yellow-bg); }
+        .ai-coach-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-on-yellow-bg); }
+        .ai-coach-body { font-size: 15px; line-height: 1.55; color: var(--kaplan-charcoal); }
+        .ai-coach-body.loading { color: var(--kaplan-slate); font-style: italic; }
+        .ai-coach-loading-dots::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--kaplan-slate); margin-left: 6px; animation: pulse 1.2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        .ai-coach-match-indicators { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; }
+        .ai-match-pill { padding: 3px 10px; border-radius: 999px; font-weight: 700; letter-spacing: 0.02em; }
+        .ai-match-pill.found { background: #EAFAF1; color: var(--text-on-green-bg); }
+        .ai-match-pill.missed { background: #FDECEB; color: #B91C1C; }
+        .ai-coach-words { margin-top: 10px; font-size: 13px; color: var(--text-on-yellow-bg); line-height: 1.5; }
+        .ai-coach-words:empty { display: none; }
+        .ai-coach-words-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; margin-right: 6px; }
+        .ai-coach-word { display: inline-block; padding: 2px 10px; margin: 2px 4px 2px 0; border-radius: 999px; background: var(--kaplan-white); border: 1px solid #F5DCA0; color: var(--text-on-yellow-bg); font-weight: 700; }
 
-    // Cap student inputs to discourage prompt stuffing
-    const trimmedInput = typeof studentInput === 'string' ? studentInput.trim().slice(0, 1000) : '';
-    const trimmedClue  = typeof clueAnalysis === 'string' ? clueAnalysis.trim().slice(0, 1000) : '';
-    const trimmedPred  = typeof prediction   === 'string' ? prediction.trim().slice(0, 200)    : '';
+        /* Completion-screen vocab-to-review chips */
+        .subsection-help { font-size: 13px; color: var(--kaplan-slate); line-height: 1.45; margin: -4px 0 12px; }
+        .words-review-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .review-word-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; background: #FDECEB; border: 1px solid #F5C6C0; color: #B91C1C; font-size: 14px; font-weight: 700; }
+        .review-word-source { font-size: 11px; font-weight: 600; color: #B91C1C; opacity: 0.7; letter-spacing: 0.04em; }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return json({ error: 'Server misconfigured: GEMINI_API_KEY not set' }, 500);
+        /* In-app feedback form */
+        .feedback-panel { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 16px; padding: 28px; }
+        .feedback-panel h3 { font-family: 'Merriweather', 'Georgia', serif; font-size: 18px; font-weight: 700; color: var(--kaplan-purple); margin-bottom: 6px; }
+        .feedback-panel .feedback-sub { font-size: 14px; color: var(--kaplan-slate); margin-bottom: 20px; }
+        .rating-row { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
+        .rating-star { background: none; border: none; font-size: 32px; cursor: pointer; color: #D1D5DB; transition: color 0.15s, transform 0.15s; padding: 4px; line-height: 1; }
+        .rating-star:hover, .rating-star.active { color: var(--kaplan-yellow); }
+        .rating-star:hover { transform: scale(1.1); }
+        .rating-star:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-radius: 6px; }
+        .reaction-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
+        .reaction-btn { padding: 8px 14px; border-radius: 999px; border: 2px solid var(--kaplan-border); background: var(--kaplan-white); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--kaplan-charcoal); min-height: 36px; }
+        .reaction-btn:hover { border-color: var(--kaplan-purple); }
+        .reaction-btn.selected { background: var(--kaplan-purple); color: var(--kaplan-white); border-color: var(--kaplan-purple); }
+        .reaction-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .feedback-textarea { width: 100%; padding: 12px 14px; font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; border: 2px solid var(--kaplan-border); border-radius: 10px; background: var(--kaplan-bg); min-height: 80px; resize: vertical; color: var(--kaplan-charcoal); }
+        .feedback-textarea:focus-visible { outline: none; border-color: var(--kaplan-purple); background: var(--kaplan-white); box-shadow: 0 0 0 3px rgba(36,15,110,0.15); }
+        .feedback-submit-row { margin-top: 16px; display: flex; justify-content: flex-end; }
+        .feedback-thanks { display: none; padding: 20px; text-align: center; border-radius: 14px; background: #EAFAF1; border: 1px solid #B6ECC9; color: var(--text-on-green-bg); }
+        .feedback-thanks.visible { display: block; }
+        .feedback-thanks h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .feedback-thanks p { font-size: 14px; }
 
-    const useModel = ALLOWED_MODELS.has(model) ? model : 'gemini-2.5-flash';
-    const { prompt, schema } = buildPromptAndSchema(step, {
-        sentence,
-        rubric,
-        studentInput: trimmedInput,
-        correctPair,
-        selections,
-        clueAnalysis: trimmedClue,
-        prediction: trimmedPred
-    });
+        /* Toast */
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); padding: 12px 20px; border-radius: 10px; background: var(--kaplan-charcoal); color: white; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 300; transition: transform 0.3s ease-out; pointer-events: none; }
+        .toast.visible { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(useModel)}:generateContent`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+    <a href="#main-content" class="sr-only">Skip to Main Content</a>
 
-    let geminiResp;
-    try {
-        geminiResp = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey
+    <button id="settings-cog" class="settings-cog" aria-label="Open settings" onclick="openSettings()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+    </button>
+
+    <div id="settings-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-title" onclick="closeSettingsOnBackdrop(event)">
+        <div class="modal-card" role="document">
+            <div class="modal-header">
+                <h2 id="settings-title">Settings &amp; Instructor Tools</h2>
+                <button class="modal-close" onclick="closeSettings()" aria-label="Close settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-warning">
+                    <strong>Demo build.</strong> AI grading calls go through a server-side Netlify Function — the Gemini key lives in <code>GEMINI_API_KEY</code> on Netlify and never touches the browser. The Supabase anon key below <em>is</em> public-safe as long as RLS is configured to allow inserts only.
+                </div>
+
+                <div class="settings-row">
+                    <div style="flex:1;">
+                        <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);">AI Coach</label>
+                        <div style="font-size:12px;color:var(--kaplan-slate);margin-top:4px;">Personalized coaching via the proxy: clue analysis (Step 1), prediction check (Step 2), and a full-journey recap after Check My Answer (Step 4).</div>
+                    </div>
+                    <button id="ai-toggle" class="toggle-switch" role="switch" aria-checked="false" aria-label="Enable AI coaching" onclick="toggleAI()"></button>
+                </div>
+
+                <div class="settings-field">
+                    <label for="model-select">Model</label>
+                    <select id="model-select">
+                        <option value="gemini-2.5-flash">gemini-2.5-flash (fast, recommended)</option>
+                        <option value="gemini-2.5-pro">gemini-2.5-pro (slower, more thorough)</option>
+                    </select>
+                    <div class="settings-field-help">Only <code>gemini-2.5-flash</code> and <code>gemini-2.5-pro</code> are allowed by the function.</div>
+                </div>
+
+                <div style="border-top: 1px solid var(--kaplan-border); padding-top: 20px;">
+                    <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);display:block;margin-bottom:10px;">Supabase backend</label>
+                    <div style="font-size:12px;color:var(--kaplan-slate);margin-bottom:12px;">Events and feedback POST to your Supabase REST API. Leave blank to keep everything client-side.</div>
+                    <div class="settings-field">
+                        <label for="supabase-url-input">Supabase Project URL</label>
+                        <input type="text" id="supabase-url-input" placeholder="https://xxxxx.supabase.co" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="settings-field" style="margin-top:12px;">
+                        <label for="supabase-key-input">Anon key</label>
+                        <input type="password" id="supabase-key-input" placeholder="eyJ..." autocomplete="off" spellcheck="false">
+                        <div class="settings-field-help">Use the <strong>anon</strong> key, not the service role key. Pair with RLS policies that allow inserts only.</div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--kaplan-border); padding-top: 20px;">
+                    <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);display:block;margin-bottom:10px;">Telemetry data</label>
+                    <div style="font-size:13px;color:var(--kaplan-slate);margin-bottom:12px;">
+                        <span id="telemetry-event-count">0</span> events captured this session.
+                    </div>
+                    <div class="settings-actions">
+                        <button class="settings-action-btn" onclick="exportTelemetry()">Export as JSON</button>
+                        <button class="settings-action-btn secondary" onclick="viewTelemetry()">View in console</button>
+                        <button class="settings-action-btn danger" onclick="clearTelemetry()">Clear</button>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--kaplan-border); padding-top: 20px; display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="btn-primary" onclick="saveSettings()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <div class="page-wrap">
+
+        <header class="page-header">
+            <h1>Master the Kaplan Method for Sentence Equivalence &mdash; one step at a time</h1>
+            <div class="swoosh-center" aria-hidden="true">
+                <svg width="120" height="12" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 10 Q60 -4 118 10" stroke="#240F6E" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.25"/>
+                </svg>
+            </div>
+        </header>
+
+        <div class="kaplan-card progress-stepper" role="region" aria-label="Step progress">
+            <div class="step-boxes" role="list">
+                <div id="step-box-1" class="step-box active" role="listitem" aria-current="step" aria-label="Step 1: Clues">Clues</div>
+                <div id="step-box-2" class="step-box" role="listitem" aria-label="Step 2: Predict">Predict</div>
+                <div id="step-box-3" class="step-box" role="listitem" aria-label="Step 3: Match">Match</div>
+                <div id="step-box-4" class="step-box" role="listitem" aria-label="Step 4: Confirm">Confirm</div>
+            </div>
+        </div>
+
+        <div id="sr-announcements" class="sr-only" aria-live="polite" role="status"></div>
+
+        <main id="main-content">
+
+            <!-- ── Completion Screen ── -->
+            <section id="completion-screen" class="completion-screen" hidden tabindex="-1" aria-label="All questions complete">
+                <div class="completion-hero">
+                    <div class="completion-icon" aria-hidden="true">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <h2>Good for you!</h2>
+                    <p>You've drilled the Sentence Equivalence method and are ready to practice on your own.</p>
+                </div>
+                <div class="completion-body">
+                    <div class="stats-panel" id="completion-stats" aria-label="Your results">
+                        <div class="score-headline">
+                            <div class="score-number"><span id="score-number">0</span><span class="score-denom" id="score-denom">/0</span></div>
+                            <div class="score-label">correct on first try</div>
+                        </div>
+                        <div class="stats-subsection">
+                            <h3>By clue type</h3>
+                            <ul class="clue-breakdown" id="clue-breakdown-list"></ul>
+                        </div>
+                        <div class="stats-subsection" id="words-to-review-subsection" hidden>
+                            <h3>Vocabulary to review</h3>
+                            <p class="subsection-help">Options you selected that weren't in the correct pair. Worth adding to your study list.</p>
+                            <div id="words-to-review-list" class="words-review-grid"></div>
+                        </div>
+                        <div class="takeaway" id="takeaway-text"></div>
+                    </div>
+                    <p class="completion-message">Remember to use the steps of the method on each question you do, both when you are practicing and when you are sitting for the GRE:</p>
+                    <div class="completion-steps-reminder">
+                        <h3>The Kaplan Method for Sentence Equivalence</h3>
+                        <ol class="method-steps-list" aria-label="The four steps of the Kaplan Method">
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">1</span>
+                                <span>Read the sentence, looking for clues</span>
+                            </li>
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">2</span>
+                                <span>Predict an answer</span>
+                            </li>
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">3</span>
+                                <span>Select the two choices that most closely match your prediction</span>
+                            </li>
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">4</span>
+                                <span>Confirm your answer by reading both selections into the sentence and checking that they produce sentences alike in meaning</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="feedback-panel" id="feedback-panel">
+                        <h3>How was this practice session?</h3>
+                        <p class="feedback-sub">Your feedback shapes what we build next.</p>
+                        <div class="rating-row" role="radiogroup" aria-label="Rate this practice session (1 to 5 stars)">
+                            <button type="button" class="rating-star" data-rating="1" role="radio" aria-checked="false" aria-label="1 star" onclick="selectRating(1)">&#9733;</button>
+                            <button type="button" class="rating-star" data-rating="2" role="radio" aria-checked="false" aria-label="2 stars" onclick="selectRating(2)">&#9733;</button>
+                            <button type="button" class="rating-star" data-rating="3" role="radio" aria-checked="false" aria-label="3 stars" onclick="selectRating(3)">&#9733;</button>
+                            <button type="button" class="rating-star" data-rating="4" role="radio" aria-checked="false" aria-label="4 stars" onclick="selectRating(4)">&#9733;</button>
+                            <button type="button" class="rating-star" data-rating="5" role="radio" aria-checked="false" aria-label="5 stars" onclick="selectRating(5)">&#9733;</button>
+                        </div>
+                        <div class="reaction-row" role="group" aria-label="Quick reactions">
+                            <button type="button" class="reaction-btn" data-reaction="loved" onclick="toggleReaction(this)">&#128079; Loved it</button>
+                            <button type="button" class="reaction-btn" data-reaction="solid" onclick="toggleReaction(this)">&#128077; Solid</button>
+                            <button type="button" class="reaction-btn" data-reaction="confused" onclick="toggleReaction(this)">&#129300; Confused</button>
+                            <button type="button" class="reaction-btn" data-reaction="frustrated" onclick="toggleReaction(this)">&#128533; Frustrated</button>
+                            <button type="button" class="reaction-btn" data-reaction="idea" onclick="toggleReaction(this)">&#128161; Have an idea</button>
+                        </div>
+                        <label for="feedback-comment" class="sr-only">Comments</label>
+                        <textarea id="feedback-comment" class="feedback-textarea" placeholder="What would you improve? (optional)"></textarea>
+                        <div class="feedback-submit-row">
+                            <button type="button" class="btn-primary" onclick="submitFeedback()">Submit feedback</button>
+                        </div>
+                    </div>
+                    <div class="feedback-thanks" id="feedback-thanks">
+                        <h4>Thanks for the feedback!</h4>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Main Workspace ── -->
+            <div id="workspace-area" class="kaplan-card workspace">
+
+            <section class="question-header" aria-label="Question sentence">
+                <p id="question-label" class="label"></p>
+                <p id="sentence-display" class="sentence" tabindex="0">Loading question...</p>
+            </section>
+
+            <div class="steps-area">
+
+                <section id="step1" class="step-container active" role="region" aria-label="Step 1: Read the sentence, looking for clues" tabindex="-1">
+                    <div class="stack">
+                        <div class="step-info purple collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle" aria-expanded="false" aria-controls="step1-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+                                    </div>
+                                    <h2>Step 1: Read the sentence, looking for clues</h2>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step1-hint-body" class="hint-body" hidden>
+                                    <p>Search for structural signals like "although" (contrast), "because" (support), or descriptive phrases that reveal the blank's meaning.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="clue-input" class="field-label">Your analysis of clues/pivots:</label>
+                            <textarea id="clue-input" placeholder="Note down pivot words or clues here..." aria-describedby="step1-feedback-text"></textarea>
+                        </div>
+                        <div id="step1-ai-coach" class="ai-coach-card" aria-live="polite">
+                            <div class="ai-coach-header">
+                                <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
+                                <span class="ai-coach-label">AI Coach</span>
+                            </div>
+                            <p id="step1-ai-coach-body" class="ai-coach-body"></p>
+                            <div id="step1-ai-coach-indicators" class="ai-coach-match-indicators"></div>
+                        </div>
+                        <div id="step1-feedback" class="feedback-box feedback-purple" aria-live="polite">
+                            <h4>Expert Clue Analysis</h4>
+                            <p id="step1-feedback-text"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step2" class="step-container" role="region" aria-label="Step 2: Predict an answer" tabindex="-1">
+                    <div class="stack">
+                        <div class="step-info teal collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle teal" aria-expanded="false" aria-controls="step2-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                    </div>
+                                    <h2>Step 2: Predict an answer</h2>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step2-hint-body" class="hint-body" hidden>
+                                    <p>Formulate your own word for the blank before looking at the choices. This prevents bias from the options.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="prediction-input" class="field-label">My prediction:</label>
+                            <input type="text" id="prediction-input" placeholder="Enter your predicted word..." aria-describedby="step2-feedback-text">
+                        </div>
+                        <div id="step2-ai-coach" class="ai-coach-card" aria-live="polite">
+                            <div class="ai-coach-header">
+                                <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
+                                <span class="ai-coach-label">AI Coach</span>
+                            </div>
+                            <p id="step2-ai-coach-body" class="ai-coach-body"></p>
+                            <div id="step2-ai-coach-indicators" class="ai-coach-match-indicators"></div>
+                        </div>
+                        <div id="step2-feedback" class="feedback-box feedback-teal" aria-live="polite">
+                            <h4>Expert Prediction</h4>
+                            <p id="step2-feedback-text"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step3" class="step-container" role="region" aria-label="Step 3: Select two matching choices" tabindex="-1">
+                    <div class="stack">
+                        <div class="step-info green collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle green" aria-expanded="false" aria-controls="step3-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <h2>Step 3: Select the two choices that most closely match your prediction</h2>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step3-hint-body" class="hint-body" hidden>
+                                    <p>Look for a pair of synonyms that both align with your predicted meaning.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="prediction-recall" aria-label="Your prediction and the expert's prediction">
+                            <div class="prediction-pill student">
+                                <span class="prediction-label">Your prediction</span>
+                                <p id="step3-your-prediction" class="prediction-text"></p>
+                            </div>
+                            <div class="prediction-pill expert">
+                                <span class="prediction-label">Expert prediction</span>
+                                <p id="step3-expert-prediction" class="prediction-text"></p>
+                            </div>
+                        </div>
+                        <fieldset id="options-grid" class="options-grid" aria-describedby="selection-status">
+                            <legend id="options-instruction">Select exactly 2 options from the following choices.</legend>
+                        </fieldset>
+                        <p id="selection-status" class="sr-only" aria-live="polite"></p>
+                        <div id="selection-warning" class="selection-warning" role="alert">You must select exactly two choices.</div>
+                        <div id="step3-feedback" class="feedback-box feedback-green" aria-live="polite">
+                            <div class="feedback-header">
+                                <span id="accuracy-badge" class="accuracy-badge"></span>
+                                <h4 style="margin-bottom:0;">Choice Analysis</h4>
+                            </div>
+                            <p id="step3-feedback-text"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step4" class="step-container" role="region" aria-label="Step 4: Confirm your answer" tabindex="-1">
+                    <div class="stack-lg">
+                        <div class="step-info gold collapsible-hint">
+                            <div style="width:100%;">
+                                <button class="hint-toggle gold" aria-expanded="false" aria-controls="step4-hint-body" onclick="toggleHint(this)">
+                                    <div class="hint-icon-wrap" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <h2>Step 4: Confirm your answer by reading your selections into the sentence</h2>
+                                    <svg class="hint-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="step4-hint-body" class="hint-body" hidden>
+                                    <p>Ensure both choices create sentences with the same overall meaning.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="read-with-panel">
+                            <div class="word-pill-group" role="group" aria-label="Choose which word to read into the sentence">
+                                <span class="word-pill-label">Read with:</span>
+                                <button type="button" class="word-pill active" id="word-pill-a" aria-pressed="true" onclick="selectPill(0)"></button>
+                                <button type="button" class="word-pill" id="word-pill-b" aria-pressed="false" onclick="selectPill(1)"></button>
+                            </div>
+                            <p id="sentence-preview" class="preview-sentence" aria-live="polite"></p>
+                        </div>
+
+                        <div id="keep-or-new" class="keep-or-new-panel">
+                            <p class="keep-or-new-question">Ready to commit, or want to reconsider?</p>
+                            <div class="keep-or-new-btns">
+                                <button id="btn-keep" class="btn-keep" onclick="handleKeep()">Check My Answer</button>
+                                <button id="btn-select-new" class="btn-select-new" onclick="handleSelectNew()">Try Different Choices</button>
+                            </div>
+                            <div id="keep-result" role="alert" style="display:none; margin-top:20px; padding:16px; border-radius:12px; font-size:16px; font-weight:600; line-height:1.5; text-align:left;"></div>
+                        </div>
+
+                        <div id="step4-ai-coach" class="ai-coach-card" aria-live="polite">
+                            <div class="ai-coach-header">
+                                <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
+                                <span class="ai-coach-label">AI Coach &middot; Journey Recap</span>
+                            </div>
+                            <p id="step4-ai-coach-body" class="ai-coach-body"></p>
+                            <div id="step4-ai-coach-words" class="ai-coach-words"></div>
+                        </div>
+
+                        <div id="expert-review-panel" class="expert-review" hidden>
+                            <h2>Expert Review</h2>
+                            <div class="review-sections">
+                                <div>
+                                    <span class="review-label">The Correct Pair</span>
+                                    <p id="correct-answer-text" class="correct-pair"></p>
+                                </div>
+                                <div>
+                                    <span class="review-label">Strategic Logic</span>
+                                    <p id="explanation-text" class="explanation"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <div class="controls" role="navigation" aria-label="Step navigation">
+                <button id="prev-btn" class="btn-back" disabled aria-label="Go to previous step">Back</button>
+                <button id="next-btn" class="btn-primary">Check Step 1</button>
+                <button id="restart-btn" class="btn-teal hidden">Next Question</button>
+            </div>
+
+            </div><!-- /#workspace-area -->
+
+        </main>
+
+    </div>
+
+    <script>
+        var questions = [
+            {
+                sentence: "Though the CEO claimed to be an advocate of transparency, her responses to the shareholders\u2019 questions were notably _________, designed to reveal as little as possible.",
+                options: ["candid", "opaque", "ambiguous", "obscure", "forthright", "equivocal"],
+                correct: ["opaque", "obscure"],
+                clues: "The word \u2018Though\u2019 is your contrast pivot. It contrasts the CEO\u2019s \u2018claim\u2019 of transparency with her actual behavior. The clue \u2018reveal as little as possible\u2019 defines the blank as the direct opposite of transparency\u2014something intentionally hidden.",
+                prediction: "Something like \u2018unclear\u2019, \u2018hidden\u2019, or \u2018blocking light/information\u2019.",
+                explanation: "The pivot \u2018Though\u2019 signals a contrast. Since she claimed transparency but was \u2018designed to reveal as little as possible,\u2019 the blank must mean \u2018not transparent.\u2019 While \u2018ambiguous\u2019 and \u2018equivocal\u2019 mean open to multiple interpretations (signaling lack of direction), \u2018opaque\u2019 and \u2018obscure\u2019 better describe a concerted effort to withhold information by making it difficult to perceive or see through.",
+                clueType: "contrast-pivot",
+                step1Rubric: { pivot: "Though", keyClue: "reveal as little as possible" },
+                step2Rubric: { targetMeanings: ["unclear", "hidden", "opaque", "vague", "not transparent", "concealing", "evasive"] }
             },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    responseMimeType: 'application/json',
-                    responseSchema: schema,
-                    temperature: 0.2,
-                    maxOutputTokens: 1000
+            {
+                sentence: "The professor\u2019s lecture was so _________ that even the most attentive students found it difficult to follow the convoluted logic.",
+                options: ["abstruse", "pellucid", "recondite", "limpid", "manifest", "erudite"],
+                correct: ["abstruse", "recondite"],
+                clues: "The \u2018so\u2026 that\u2019 structure indicates cause-and-effect. The effect is \u2018difficult to follow\u2019 and \u2018convoluted logic\u2019, so the cause must be a word meaning complex or obscure.",
+                prediction: "Words like \u2018complex\u2019, \u2018obscure\u2019, or \u2018hard to understand\u2019.",
+                explanation: "\u2018Abstruse\u2019 and \u2018recondite\u2019 both mean difficult to understand or obscure. This perfectly matches the logic of a lecture that was \u2018convoluted\u2019 and \u2018difficult to follow.\u2019",
+                clueType: "cause-effect",
+                step1Rubric: { pivot: "so... that", keyClue: "difficult to follow / convoluted logic" },
+                step2Rubric: { targetMeanings: ["complex", "obscure", "confusing", "difficult", "hard to understand", "impenetrable", "incomprehensible"] }
+            },
+            {
+                sentence: "The transition from a command economy to a market economy was anything but _________; instead, it was characterized by periods of intense volatility and social unrest.",
+                options: ["volatile", "quiescent", "stagnant", "tumultuous", "predictable", "placid"],
+                correct: ["quiescent", "placid"],
+                clues: "The phrase \u2018anything but\u2019 acts as a negation. The blank must be the opposite of the description that follows: \u2018volatility and social unrest.\u2019",
+                prediction: "A word meaning \u2018calm\u2019, \u2018peaceful\u2019, or \u2018stable.\u2019",
+                explanation: "Because the transition was volatile and unrestful, it was \u2018anything but\u2019 calm. \u2018Quiescent\u2019 and \u2018placid\u2019 both describe a state of quiet or calm, which fits the logic of the negation.",
+                clueType: "negation",
+                step1Rubric: { pivot: "anything but", keyClue: "volatility and social unrest" },
+                step2Rubric: { targetMeanings: ["calm", "peaceful", "stable", "quiet", "tranquil", "smooth", "untroubled"] }
+            },
+            {
+                sentence: "The CEO\u2019s speech was marked by a(n) __________ that many employees found unsettling; while she spoke of \u201ccollaboration\u201d and \u201csynergy,\u201d her rigid posture and sharp directives suggested a far more autocratic leadership style.",
+                options: ["dissonance", "congruity", "discrepancy", "ambivalence", "prevarication", "equivocation"],
+                correct: ["dissonance", "discrepancy"],
+                clues: "The semicolon signals an elaboration or explanation of the blank. The contrast between what the CEO \u2018spoke of\u2019 (collaboration, synergy) and what her body language and directives \u2018suggested\u2019 (autocratic style) defines the blank as a mismatch or contradiction between two things.",
+                prediction: "A word meaning \u2018mismatch\u2019, \u2018contradiction\u2019, or \u2018inconsistency\u2019 between words and actions.",
+                explanation: "The sentence sets up a gap between the CEO\u2019s cooperative language and her authoritarian behavior. \u2018Dissonance\u2019 refers to a lack of harmony or agreement between elements, and \u2018discrepancy\u2019 means a difference or inconsistency between two things\u2014both perfectly capture this gap. \u2018Ambivalence\u2019 describes internal mixed feelings rather than an external contradiction, while \u2018prevarication\u2019 and \u2018equivocation\u2019 refer to deliberately evasive speech, not a mismatch between words and actions.",
+                clueType: "definition",
+                step1Rubric: { pivot: "semicolon / while", keyClue: "gap between 'collaboration/synergy' and autocratic behavior" },
+                step2Rubric: { targetMeanings: ["mismatch", "contradiction", "inconsistency", "gap", "disconnect", "disagreement", "incongruity"] }
+            },
+            {
+                sentence: "Despite the scholar\u2019s reputation for __________, his latest monograph was surprisingly accessible, eschewing the dense, impenetrable prose that had characterized his earlier contributions to the field of linguistics.",
+                options: ["limpidity", "arcaneness", "perspicacity", "reconditeness", "eloquence", "lucidity"],
+                correct: ["arcaneness", "reconditeness"],
+                clues: "The pivot word \u2018Despite\u2019 signals a contrast between the scholar\u2019s established reputation and how his latest work turned out. Since the new monograph is \u2018surprisingly accessible\u2019 and avoids \u2018dense, impenetrable prose,\u2019 his reputation must be for the opposite\u2014something difficult or obscure.",
+                prediction: "A word meaning \u2018obscurity\u2019, \u2018difficulty\u2019, or \u2018impenetrability\u2019 in scholarly writing.",
+                explanation: "\u2018Despite\u2019 tells us the new book defies expectations set by his reputation. Since the new work is accessible and avoids dense prose, his reputation must be for inaccessibility. \u2018Arcaneness\u2019 means the quality of being mysterious and understood by few, while \u2018reconditeness\u2019 means the quality of being little known or abstruse\u2014both capture a reputation for difficult, obscure scholarship. \u2018Limpidity\u2019 and \u2018lucidity\u2019 mean clarity, the opposite of what is needed, and \u2018perspicacity\u2019 refers to keen insight rather than stylistic obscurity.",
+                clueType: "contrast-pivot",
+                step1Rubric: { pivot: "Despite", keyClue: "surprisingly accessible / dense, impenetrable prose" },
+                step2Rubric: { targetMeanings: ["obscurity", "difficulty", "impenetrability", "complexity", "opacity", "inaccessibility"] }
+            }
+        ];
+
+        var currentQuestionIndex = 0;
+        var currentStep = 1;
+        var isFeedbackState = false;
+        var selectedOptions = [];
+
+        // Session tracking for completion-screen stats + localStorage resume
+        var sessionData = { questionResults: [] };
+        var currentQuestionFirstAttempt = true;
+        var currentStepStart = null;
+        var currentQuestionStepTimes = [0, 0, 0, 0];
+        var STORAGE_KEY = 'gre-se-scaffolder-session-v1';
+
+        var clueTypeLabels = {
+            'contrast-pivot': 'Contrast pivots',
+            'cause-effect': 'Cause & effect',
+            'negation': 'Negation',
+            'definition': 'Definition / elaboration'
+        };
+
+        function saveSession() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    currentQuestionIndex: currentQuestionIndex,
+                    questionResults: sessionData.questionResults
+                }));
+            } catch (e) { /* storage unavailable — fail silently */ }
+        }
+        function loadSession() {
+            try {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                var data = JSON.parse(raw);
+                if (typeof data.currentQuestionIndex !== 'number') return false;
+                if (data.currentQuestionIndex < 0 || data.currentQuestionIndex >= questions.length) return false;
+                currentQuestionIndex = data.currentQuestionIndex;
+                if (Array.isArray(data.questionResults)) sessionData.questionResults = data.questionResults;
+                return true;
+            } catch (e) { return false; }
+        }
+        function clearSession() {
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        }
+
+        function accumulateStepTime() {
+            if (currentStepStart !== null && currentStep >= 1 && currentStep <= 4) {
+                var elapsed = Date.now() - currentStepStart;
+                currentQuestionStepTimes[currentStep - 1] += elapsed;
+            }
+            currentStepStart = Date.now();
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // Settings / AI config (stored in localStorage)
+        // ──────────────────────────────────────────────────────────────
+        var SETTINGS_KEY = 'gre-se-settings-v1';
+        var defaultSettings = {
+            aiEnabled: false,
+            model: 'gemini-2.5-flash',
+            supabaseUrl: '',
+            supabaseAnonKey: ''
+        };
+        var settings = Object.assign({}, defaultSettings);
+
+        function loadSettings() {
+            try {
+                var raw = localStorage.getItem(SETTINGS_KEY);
+                if (raw) Object.assign(settings, JSON.parse(raw));
+            } catch (e) {}
+        }
+        function persistSettings() {
+            try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+        }
+        function openSettings() {
+            document.getElementById('model-select').value = settings.model || 'gemini-2.5-flash';
+            var supaUrl = document.getElementById('supabase-url-input');
+            var supaKey = document.getElementById('supabase-key-input');
+            if (supaUrl) supaUrl.value = settings.supabaseUrl || '';
+            if (supaKey) supaKey.value = settings.supabaseAnonKey || '';
+            var toggle = document.getElementById('ai-toggle');
+            toggle.classList.toggle('on', !!settings.aiEnabled);
+            toggle.setAttribute('aria-checked', !!settings.aiEnabled);
+            document.getElementById('telemetry-event-count').textContent = telemetryQueue.length;
+            document.getElementById('settings-modal').classList.add('active');
+        }
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('active');
+        }
+        function closeSettingsOnBackdrop(e) {
+            if (e.target === e.currentTarget) closeSettings();
+        }
+        function toggleAI() {
+            settings.aiEnabled = !settings.aiEnabled;
+            var toggle = document.getElementById('ai-toggle');
+            toggle.classList.toggle('on', settings.aiEnabled);
+            toggle.setAttribute('aria-checked', settings.aiEnabled);
+        }
+        function saveSettings() {
+            settings.model = document.getElementById('model-select').value;
+            var supaUrl = document.getElementById('supabase-url-input');
+            var supaKey = document.getElementById('supabase-key-input');
+            if (supaUrl) settings.supabaseUrl = supaUrl.value.trim().replace(/\/+$/, '');
+            if (supaKey) settings.supabaseAnonKey = supaKey.value.trim();
+            persistSettings();
+            closeSettings();
+            showToast('Settings saved');
+            flushTelemetryQueue();
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // AI grading via Gemini
+        // ──────────────────────────────────────────────────────────────
+        function isAIReady() {
+            return !!settings.aiEnabled;
+        }
+
+        function showCoachLoading(step) {
+            var card = document.getElementById('step' + step + '-ai-coach');
+            var body = document.getElementById('step' + step + '-ai-coach-body');
+            var indicators = document.getElementById('step' + step + '-ai-coach-indicators');
+            body.className = 'ai-coach-body loading';
+            body.innerHTML = 'Reviewing your answer<span class="ai-coach-loading-dots"></span>';
+            indicators.innerHTML = '';
+            card.classList.add('visible');
+        }
+        function showCoachResult(step, nudge, indicators) {
+            var card = document.getElementById('step' + step + '-ai-coach');
+            var body = document.getElementById('step' + step + '-ai-coach-body');
+            var indEl = document.getElementById('step' + step + '-ai-coach-indicators');
+            body.className = 'ai-coach-body';
+            body.textContent = nudge;
+            indEl.innerHTML = '';
+            (indicators || []).forEach(function(ind) {
+                var pill = document.createElement('span');
+                pill.className = 'ai-match-pill ' + (ind.found ? 'found' : 'missed');
+                pill.textContent = (ind.found ? '\u2713 ' : '\u2717 ') + ind.label;
+                indEl.appendChild(pill);
+            });
+            card.classList.add('visible');
+        }
+        function hideCoach(step) {
+            document.getElementById('step' + step + '-ai-coach').classList.remove('visible');
+        }
+
+        // Proxy call to /.netlify/functions/grade — no API key on the client.
+        function callGradingProxy(payload) {
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 14000);
+            return fetch('/.netlify/functions/grade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                signal: controller.signal
+            }).then(function(resp) {
+                clearTimeout(timeoutId);
+                return resp.json().then(function(body) {
+                    if (!resp.ok) throw new Error((body && body.error) || ('Grading proxy ' + resp.status));
+                    return body;
+                });
+            });
+        }
+
+        function gradeStep1() {
+            var q = questions[currentQuestionIndex];
+            if (!isAIReady() || !q.step1Rubric) return Promise.resolve(null);
+            return callGradingProxy({
+                step: 1,
+                sentence: q.sentence,
+                rubric: q.step1Rubric,
+                studentInput: clueInput.value.trim(),
+                model: settings.model
+            });
+        }
+
+        function gradeStep2() {
+            var q = questions[currentQuestionIndex];
+            if (!isAIReady() || !q.step2Rubric) return Promise.resolve(null);
+            return callGradingProxy({
+                step: 2,
+                sentence: q.sentence,
+                rubric: q.step2Rubric,
+                studentInput: predictionInput.value.trim(),
+                model: settings.model
+            });
+        }
+
+        function gradeStep4() {
+            var q = questions[currentQuestionIndex];
+            if (!isAIReady() || selectedOptions.length !== 2) return Promise.resolve(null);
+            return callGradingProxy({
+                step: 4,
+                sentence: q.sentence,
+                correctPair: q.correct,
+                selections: selectedOptions.slice(),
+                clueAnalysis: (clueInput.value || '').trim(),
+                prediction: (predictionInput.value || '').trim(),
+                model: settings.model
+            });
+        }
+
+        function gradeSession(results) {
+            if (!isAIReady() || !Array.isArray(results) || results.length === 0) return Promise.resolve(null);
+            // Build a compact per-question payload from what we've tracked
+            var payloadQuestions = results.map(function(r, i) {
+                var q = questions[i] || {};
+                return {
+                    sentence: q.sentence || '',
+                    correctPair: q.correct || [],
+                    clueAnalysis: (r && r.clueAnalysisText) || '',
+                    prediction: (r && r.predictionText) || '',
+                    selections: (r && r.selections) || [],
+                    correctFirstTry: !!(r && r.correctFirstTry),
+                    aiStep1: (r && r.aiStep1) || null,
+                    aiStep2: (r && r.aiStep2) || null
+                };
+            });
+            return callGradingProxy({
+                step: 5,
+                questions: payloadQuestions,
+                model: settings.model
+            });
+        }
+
+        function showStep4CoachResult(summary, wordsToReview) {
+            var card = document.getElementById('step4-ai-coach');
+            var body = document.getElementById('step4-ai-coach-body');
+            var wordsEl = document.getElementById('step4-ai-coach-words');
+            body.className = 'ai-coach-body';
+            body.textContent = summary;
+            wordsEl.innerHTML = '';
+            if (Array.isArray(wordsToReview) && wordsToReview.length > 0) {
+                var label = document.createElement('span');
+                label.className = 'ai-coach-words-label';
+                label.textContent = 'Worth reviewing:';
+                wordsEl.appendChild(label);
+                wordsToReview.forEach(function(w) {
+                    var chip = document.createElement('span');
+                    chip.className = 'ai-coach-word';
+                    chip.textContent = w;
+                    wordsEl.appendChild(chip);
+                });
+            }
+            card.classList.add('visible');
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // Telemetry: sessionId + event buffer + Supabase sync
+        // ──────────────────────────────────────────────────────────────
+        var TELEMETRY_QUEUE_KEY = 'gre-se-telemetry-queue-v1';
+        var SESSION_ID_KEY = 'gre-se-session-id';
+        var telemetryQueue = [];
+        var sessionId = null;
+
+        function uuid4() {
+            // RFC4122 v4
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        function initSession() {
+            try {
+                sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+                if (!sessionId) {
+                    sessionId = uuid4();
+                    sessionStorage.setItem(SESSION_ID_KEY, sessionId);
                 }
-            }),
-            signal: controller.signal
+            } catch (e) { sessionId = uuid4(); }
+            try {
+                var raw = localStorage.getItem(TELEMETRY_QUEUE_KEY);
+                if (raw) telemetryQueue = JSON.parse(raw) || [];
+            } catch (e) { telemetryQueue = []; }
+        }
+        function persistTelemetryQueue() {
+            try { localStorage.setItem(TELEMETRY_QUEUE_KEY, JSON.stringify(telemetryQueue)); } catch (e) {}
+        }
+
+        function sendEvent(eventType, payload) {
+            var event = {
+                session_id: sessionId,
+                event_type: eventType,
+                question_index: (payload && typeof payload.questionIndex === 'number') ? payload.questionIndex : null,
+                step_number: (payload && typeof payload.stepNumber === 'number') ? payload.stepNumber : null,
+                duration_ms: (payload && typeof payload.durationMs === 'number') ? payload.durationMs : null,
+                payload: payload || {},
+                user_agent: navigator.userAgent,
+                client_timestamp: new Date().toISOString()
+            };
+            telemetryQueue.push(event);
+            persistTelemetryQueue();
+            postEventToSupabase(event);
+        }
+
+        function postEventToSupabase(event) {
+            if (!settings.supabaseUrl || !settings.supabaseAnonKey) return; // queued for later
+            fetch(settings.supabaseUrl + '/rest/v1/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': settings.supabaseAnonKey,
+                    'Authorization': 'Bearer ' + settings.supabaseAnonKey,
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(event)
+            }).then(function(resp) {
+                if (resp.ok) {
+                    // remove this event from the queue
+                    telemetryQueue = telemetryQueue.filter(function(e) {
+                        return !(e.session_id === event.session_id && e.client_timestamp === event.client_timestamp && e.event_type === event.event_type);
+                    });
+                    persistTelemetryQueue();
+                }
+            }).catch(function() { /* stays queued */ });
+        }
+
+        function flushTelemetryQueue() {
+            if (!settings.supabaseUrl || !settings.supabaseAnonKey) return;
+            if (!telemetryQueue.length) return;
+            var snapshot = telemetryQueue.slice();
+            snapshot.forEach(postEventToSupabase);
+        }
+
+        function exportTelemetry() {
+            var blob = new Blob([JSON.stringify(telemetryQueue, null, 2)], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'telemetry-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Exported ' + telemetryQueue.length + ' events');
+        }
+        function viewTelemetry() {
+            console.log('[Telemetry] Queue contents:', telemetryQueue);
+            console.log('[Telemetry] Session ID:', sessionId);
+            showToast('Logged to browser console');
+        }
+        function clearTelemetry() {
+            if (!confirm('Clear all buffered telemetry events? (Already-synced events on the backend are not affected.)')) return;
+            telemetryQueue = [];
+            persistTelemetryQueue();
+            document.getElementById('telemetry-event-count').textContent = '0';
+            showToast('Telemetry queue cleared');
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // Feedback form (on completion screen)
+        // ──────────────────────────────────────────────────────────────
+        var feedbackState = { rating: 0, reactions: [] };
+
+        function selectRating(n) {
+            feedbackState.rating = n;
+            document.querySelectorAll('.rating-star').forEach(function(star) {
+                var val = parseInt(star.getAttribute('data-rating'), 10);
+                star.classList.toggle('active', val <= n);
+                star.setAttribute('aria-checked', val === n ? 'true' : 'false');
+            });
+        }
+        function toggleReaction(btn) {
+            var reaction = btn.getAttribute('data-reaction');
+            var idx = feedbackState.reactions.indexOf(reaction);
+            if (idx === -1) { feedbackState.reactions.push(reaction); btn.classList.add('selected'); }
+            else { feedbackState.reactions.splice(idx, 1); btn.classList.remove('selected'); }
+        }
+        function submitFeedback() {
+            var comment = document.getElementById('feedback-comment').value.trim();
+            var results = sessionData.questionResults.filter(function(r) { return r; });
+            var summary = {
+                total_questions: results.length,
+                correct_first_try: results.filter(function(r) { return r.correctFirstTry; }).length,
+                clue_type_breakdown: {}
+            };
+            results.forEach(function(r) {
+                var t = r.clueType || 'other';
+                if (!summary.clue_type_breakdown[t]) summary.clue_type_breakdown[t] = { correct: 0, total: 0 };
+                summary.clue_type_breakdown[t].total++;
+                if (r.correctFirstTry) summary.clue_type_breakdown[t].correct++;
+            });
+
+            var feedbackRecord = {
+                session_id: sessionId,
+                rating: feedbackState.rating || null,
+                reactions: feedbackState.reactions,
+                comment: comment || null,
+                session_summary: summary,
+                user_agent: navigator.userAgent,
+                client_timestamp: new Date().toISOString()
+            };
+
+            sendEvent('feedback_submitted', {
+                rating: feedbackState.rating,
+                reactions: feedbackState.reactions,
+                commentLength: comment.length,
+                hasComment: comment.length > 0
+            });
+
+            postFeedbackToSupabase(feedbackRecord);
+
+            document.getElementById('feedback-panel').style.display = 'none';
+            document.getElementById('feedback-thanks').classList.add('visible');
+        }
+        function postFeedbackToSupabase(record) {
+            if (!settings.supabaseUrl || !settings.supabaseAnonKey) return;
+            fetch(settings.supabaseUrl + '/rest/v1/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': settings.supabaseAnonKey,
+                    'Authorization': 'Bearer ' + settings.supabaseAnonKey,
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(record)
+            }).catch(function() { /* non-fatal */ });
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // Toast
+        // ──────────────────────────────────────────────────────────────
+        var toastTimer = null;
+        function showToast(message) {
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('visible');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('visible'); }, 2400);
+        }
+
+        var sentenceDisplay = document.getElementById('sentence-display');
+        var questionLabel = document.getElementById('question-label');
+        var clueInput = document.getElementById('clue-input');
+        var predictionInput = document.getElementById('prediction-input');
+        var optionsGrid = document.getElementById('options-grid');
+        var nextBtn = document.getElementById('next-btn');
+        var prevBtn = document.getElementById('prev-btn');
+        var restartBtn = document.getElementById('restart-btn');
+        var srAnnouncements = document.getElementById('sr-announcements');
+        var selectionStatus = document.getElementById('selection-status');
+
+        var stepInstructions = [
+            "Read the sentence, looking for clues",
+            "Predict an answer",
+            "Select the two choices that most closely match your prediction",
+            "Confirm your answer by reading your selected choices into the sentence"
+        ];
+
+        function announce(message) {
+            srAnnouncements.textContent = '';
+            setTimeout(function() { srAnnouncements.textContent = message; }, 100);
+        }
+
+        function loadQuestion() {
+            var q = questions[currentQuestionIndex];
+            questionLabel.textContent = 'Question ' + (currentQuestionIndex + 1) + ' of ' + questions.length + ' \u2014 Sentence Equivalence';
+            sentenceDisplay.textContent = q.sentence;
+            clueInput.value = '';
+            predictionInput.value = '';
+            selectedOptions = [];
+            isFeedbackState = false;
+            currentQuestionFirstAttempt = true;
+            currentQuestionStepTimes = [0, 0, 0, 0];
+
+            optionsGrid.innerHTML = '';
+            q.options.sort().forEach(function(option, idx) {
+                var letter = String.fromCharCode(65 + idx);
+                var btn = document.createElement('button');
+                btn.className = 'option-card';
+                btn.innerHTML = '<span class="option-letter" aria-hidden="true">' + letter + '</span><span class="option-word"></span>';
+                btn.querySelector('.option-word').textContent = option;
+                btn.setAttribute('aria-pressed', 'false');
+                btn.setAttribute('aria-label', 'Option ' + letter + ': ' + option);
+                btn.setAttribute('type', 'button');
+                btn.onclick = function() {
+                    if (!isFeedbackState) toggleOption(btn, option);
+                };
+                optionsGrid.appendChild(btn);
+            });
+
+            // Hide all feedback panels on question load
+            document.querySelectorAll('.feedback-box').forEach(function(f) { f.classList.remove('active'); });
+            document.getElementById('selection-warning').classList.remove('visible');
+            hideCoach(1);
+            hideCoach(2);
+            hideCoach(4);
+
+            // Tutorial-style: pre-expand hints on Q1, collapse from Q2 on
+            var expandHints = currentQuestionIndex === 0;
+            document.querySelectorAll('.hint-toggle').forEach(function(btn) {
+                btn.setAttribute('aria-expanded', expandHints ? 'true' : 'false');
+                var bodyId = btn.getAttribute('aria-controls');
+                var body = document.getElementById(bodyId);
+                if (body) {
+                    if (expandHints) body.removeAttribute('hidden');
+                    else body.setAttribute('hidden', '');
+                }
+            });
+
+            selectionStatus.textContent = '0 of 2 choices selected.';
+            saveSession();
+            sendEvent('question_start', {
+                questionIndex: currentQuestionIndex,
+                clueType: q.clueType,
+                sentencePreview: q.sentence.slice(0, 60) + (q.sentence.length > 60 ? '\u2026' : '')
+            });
+            goToStep(1);
+            announce('Question ' + (currentQuestionIndex + 1) + ' of ' + questions.length + ' loaded. ' + q.sentence);
+        }
+
+        function toggleOption(element, option) {
+            if (selectedOptions.includes(option)) {
+                selectedOptions = selectedOptions.filter(function(o) { return o !== option; });
+                element.classList.remove('selected');
+                element.setAttribute('aria-pressed', 'false');
+            } else {
+                if (selectedOptions.length < 2) {
+                    selectedOptions.push(option);
+                    element.classList.add('selected');
+                    element.setAttribute('aria-pressed', 'true');
+                } else {
+                    announce('Maximum of 2 selections reached. Deselect one first.');
+                    return;
+                }
+            }
+            document.getElementById('selection-warning').classList.remove('visible');
+            var statusMsg = selectedOptions.length + ' of 2 choices selected.';
+            if (selectedOptions.length > 0) {
+                statusMsg += ' Selected: ' + selectedOptions.join(', ') + '.';
+            }
+            selectionStatus.textContent = statusMsg;
+            announce(statusMsg);
+        }
+
+        function goToStep(step) {
+            accumulateStepTime();
+            document.querySelectorAll('.step-container').forEach(function(c) { c.classList.remove('active'); });
+            var stepEl = document.getElementById('step' + step);
+            stepEl.classList.add('active');
+            currentStep = step;
+            isFeedbackState = false;
+            currentStepStart = Date.now();
+            if (step === 3) updateStep3PredictionRecall();
+            updateUI();
+            announce('Step ' + step + ' of 4: ' + stepInstructions[step - 1]);
+            document.getElementById('step' + step).focus();
+        }
+
+        function updateStep3PredictionRecall() {
+            var q = questions[currentQuestionIndex];
+            var yourEl = document.getElementById('step3-your-prediction');
+            var expertEl = document.getElementById('step3-expert-prediction');
+            if (yourEl) yourEl.textContent = (predictionInput.value || '').trim();
+            if (expertEl) expertEl.textContent = q.prediction || '';
+        }
+
+        function updateUI() {
+            for (var s = 1; s <= 4; s++) {
+                var box = document.getElementById('step-box-' + s);
+                if (s === currentStep) {
+                    box.classList.add('active');
+                    box.setAttribute('aria-current', 'step');
+                } else {
+                    box.classList.remove('active');
+                    box.removeAttribute('aria-current');
+                }
+            }
+
+            if (currentStep === 1 || isFeedbackState) {
+                prevBtn.disabled = true;
+                prevBtn.setAttribute('aria-hidden', 'true');
+            } else {
+                prevBtn.disabled = false;
+                prevBtn.removeAttribute('aria-hidden');
+            }
+
+            nextBtn.textContent = isFeedbackState ? 'Continue' : 'Check Step ' + currentStep;
+
+            if (currentStep === 4) {
+                updateReviewStep();
+                nextBtn.classList.add('hidden');
+                nextBtn.setAttribute('aria-hidden', 'true');
+                restartBtn.textContent = (currentQuestionIndex < questions.length - 1) ? 'Next Question' : 'Finish';
+                restartBtn.classList.add('hidden');
+                restartBtn.setAttribute('aria-hidden', 'true');
+            } else {
+                nextBtn.classList.remove('hidden');
+                nextBtn.removeAttribute('aria-hidden');
+                restartBtn.classList.add('hidden');
+                restartBtn.setAttribute('aria-hidden', 'true');
+            }
+        }
+
+        function handleNext() {
+            var q = questions[currentQuestionIndex];
+
+            if (!isFeedbackState) {
+                if (currentStep === 1) {
+                    if (!clueInput.value.trim()) {
+                        announce('Please enter your clue analysis before continuing.');
+                        return clueInput.focus();
+                    }
+                    document.getElementById('step1-feedback-text').textContent = q.clues;
+                    document.getElementById('step1-feedback').classList.add('active');
+                    announce('Expert clue analysis: ' + q.clues);
+
+                    // Persist student text for the session-recap call later
+                    if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                    sessionData.questionResults[currentQuestionIndex].clueAnalysisText = clueInput.value.trim();
+
+                    sendEvent('step_complete', {
+                        questionIndex: currentQuestionIndex,
+                        stepNumber: 1,
+                        durationMs: currentQuestionStepTimes[0],
+                        studentInput: clueInput.value.trim()
+                    });
+
+                    if (isAIReady()) {
+                        showCoachLoading(1);
+                        gradeStep1().then(function(result) {
+                            if (!result) { hideCoach(1); return; }
+                            showCoachResult(1, result.nudge, [
+                                { label: 'Pivot word', found: !!result.pivotFound },
+                                { label: 'Key clue', found: !!result.clueFound }
+                            ]);
+                            // Persist for completion-screen takeaway logic
+                            if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                            sessionData.questionResults[currentQuestionIndex].aiStep1 = {
+                                pivotFound: !!result.pivotFound,
+                                clueFound: !!result.clueFound
+                            };
+                            saveSession();
+                            sendEvent('ai_grade_step1', {
+                                questionIndex: currentQuestionIndex,
+                                studentInput: clueInput.value.trim(),
+                                pivotFound: !!result.pivotFound,
+                                clueFound: !!result.clueFound,
+                                nudge: result.nudge
+                            });
+                        }).catch(function(err) {
+                            hideCoach(1);
+                            console.warn('[AI Coach] Step 1 grading failed:', err);
+                        });
+                    } else {
+                        hideCoach(1);
+                    }
+                } else if (currentStep === 2) {
+                    if (!predictionInput.value.trim()) {
+                        announce('Please enter your prediction before continuing.');
+                        return predictionInput.focus();
+                    }
+                    document.getElementById('step2-feedback-text').textContent = q.prediction;
+                    document.getElementById('step2-feedback').classList.add('active');
+                    announce('Expert prediction: ' + q.prediction);
+
+                    if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                    sessionData.questionResults[currentQuestionIndex].predictionText = predictionInput.value.trim();
+
+                    sendEvent('step_complete', {
+                        questionIndex: currentQuestionIndex,
+                        stepNumber: 2,
+                        durationMs: currentQuestionStepTimes[1],
+                        studentInput: predictionInput.value.trim()
+                    });
+
+                    if (isAIReady()) {
+                        showCoachLoading(2);
+                        gradeStep2().then(function(result) {
+                            if (!result) { hideCoach(2); return; }
+                            showCoachResult(2, result.nudge, [
+                                { label: 'Meaning match', found: !!result.meaningMatch }
+                            ]);
+                            if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                            sessionData.questionResults[currentQuestionIndex].aiStep2 = {
+                                meaningMatch: !!result.meaningMatch
+                            };
+                            saveSession();
+                            sendEvent('ai_grade_step2', {
+                                questionIndex: currentQuestionIndex,
+                                studentInput: predictionInput.value.trim(),
+                                meaningMatch: !!result.meaningMatch,
+                                nudge: result.nudge
+                            });
+                        }).catch(function(err) {
+                            hideCoach(2);
+                            console.warn('[AI Coach] Step 2 grading failed:', err);
+                        });
+                    } else {
+                        hideCoach(2);
+                    }
+                } else if (currentStep === 3) {
+                    if (selectedOptions.length !== 2) {
+                        document.getElementById('selection-warning').classList.add('visible');
+                        announce('You must select exactly two choices.');
+                        return;
+                    }
+                    var correctCount = selectedOptions.filter(function(o) { return q.correct.includes(o); }).length;
+                    var isCorrect = correctCount === 2;
+                    var isPartial = correctCount === 1;
+                    var badge = document.getElementById('accuracy-badge');
+                    badge.textContent = isCorrect ? 'Exact Match' : (isPartial ? 'Partial Match' : 'No Match');
+                    badge.style.color = isCorrect ? '#145C30' : (isPartial ? '#6B4F00' : '#B91C1C');
+                    var feedbackMsg = isCorrect
+                        ? 'Your selections perfectly match the synonym pair required by the sentence logic.'
+                        : (isPartial
+                            ? 'Let\u2019s see if these two words create identical meanings in the sentence during Step 4.'
+                            : 'Neither selection matches the correct pair. Read both versions in Step 4 and consider whether they produce the same meaning.');
+                    document.getElementById('step3-feedback-text').textContent = feedbackMsg;
+                    document.getElementById('step3-feedback').classList.add('active');
+                    announce((isCorrect ? 'Exact Match. ' : 'Partial Match. ') + feedbackMsg);
+
+                    sendEvent('step_complete', {
+                        questionIndex: currentQuestionIndex,
+                        stepNumber: 3,
+                        durationMs: currentQuestionStepTimes[2],
+                        selections: selectedOptions.slice(),
+                        correctCount: correctCount,
+                        matchQuality: isCorrect ? 'exact' : (isPartial ? 'partial' : 'none')
+                    });
+                }
+                isFeedbackState = true;
+            } else {
+                goToStep(currentStep + 1);
+            }
+            updateUI();
+        }
+
+        function updateReviewStep() {
+            var q = questions[currentQuestionIndex];
+            var word1 = selectedOptions[0] || '_______';
+            var word2 = selectedOptions[1] || '_______';
+
+            hideCoach(4);
+
+            var pillA = document.getElementById('word-pill-a');
+            var pillB = document.getElementById('word-pill-b');
+            pillA.textContent = word1;
+            pillB.textContent = word2;
+            pillA.setAttribute('aria-label', 'Read sentence with "' + word1 + '"');
+            pillB.setAttribute('aria-label', 'Read sentence with "' + word2 + '"');
+            pillA.classList.add('active');
+            pillA.setAttribute('aria-pressed', 'true');
+            pillB.classList.remove('active');
+            pillB.setAttribute('aria-pressed', 'false');
+            renderPreviewSentence(word1);
+
+            document.getElementById('correct-answer-text').textContent = q.correct.join(' & ');
+            document.getElementById('explanation-text').textContent = q.explanation;
+
+            document.getElementById('keep-or-new').removeAttribute('hidden');
+            document.getElementById('keep-or-new').style.opacity = '1';
+            document.getElementById('btn-keep').disabled = false;
+            document.getElementById('btn-select-new').disabled = false;
+            document.getElementById('expert-review-panel').setAttribute('hidden', '');
+
+            var resultDiv = document.getElementById('keep-result');
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+        }
+
+        function renderPreviewSentence(word) {
+            var q = questions[currentQuestionIndex];
+            var previewEl = document.getElementById('sentence-preview');
+            // Build safely: split on the blank, insert highlighted span
+            var parts = q.sentence.split('_________');
+            previewEl.innerHTML = '';
+            previewEl.appendChild(document.createTextNode(parts[0] || ''));
+            var span = document.createElement('span');
+            span.className = 'highlighted-word';
+            span.textContent = word;
+            previewEl.appendChild(span);
+            previewEl.appendChild(document.createTextNode(parts[1] || ''));
+        }
+
+        function selectPill(index) {
+            var word = selectedOptions[index];
+            if (!word) return;
+            var pillA = document.getElementById('word-pill-a');
+            var pillB = document.getElementById('word-pill-b');
+            if (index === 0) {
+                pillA.classList.add('active');
+                pillA.setAttribute('aria-pressed', 'true');
+                pillB.classList.remove('active');
+                pillB.setAttribute('aria-pressed', 'false');
+            } else {
+                pillB.classList.add('active');
+                pillB.setAttribute('aria-pressed', 'true');
+                pillA.classList.remove('active');
+                pillA.setAttribute('aria-pressed', 'false');
+            }
+            renderPreviewSentence(word);
+            announce('Reading with ' + word);
+        }
+
+        function handleKeep() {
+            accumulateStepTime();
+            var q = questions[currentQuestionIndex];
+            var isCorrect = selectedOptions.length === 2 && selectedOptions.every(function(o) { return q.correct.includes(o); });
+            var wrongSelections = selectedOptions.filter(function(o) { return !q.correct.includes(o); });
+
+            // Record result for this question (overwrite if they checked before)
+            sessionData.questionResults[currentQuestionIndex] = {
+                correct: isCorrect,
+                correctFirstTry: isCorrect && currentQuestionFirstAttempt,
+                clueType: q.clueType,
+                stepTimes: currentQuestionStepTimes.slice(),
+                selections: selectedOptions.slice(),
+                wrongSelections: wrongSelections,
+                aiWordsToReview: []
+            };
+            saveSession();
+
+            sendEvent('answer_checked', {
+                questionIndex: currentQuestionIndex,
+                stepNumber: 4,
+                durationMs: currentQuestionStepTimes[3],
+                selections: selectedOptions.slice(),
+                correctPair: q.correct,
+                correct: isCorrect,
+                firstAttempt: currentQuestionFirstAttempt,
+                correctFirstTry: isCorrect && currentQuestionFirstAttempt,
+                clueType: q.clueType
+            });
+
+            document.getElementById('btn-keep').disabled = true;
+            document.getElementById('btn-select-new').disabled = true;
+
+            var resultDiv = document.getElementById('keep-result');
+            var selectedText = selectedOptions.length === 2
+                ? '\u201c' + selectedOptions[0] + '\u201d and \u201c' + selectedOptions[1] + '\u201d'
+                : '(no selection)';
+
+            if (isCorrect) {
+                resultDiv.style.background = '#EAFAF1';
+                resultDiv.style.border = '2px solid #B6ECC9';
+                resultDiv.style.color = '#145C30';
+                resultDiv.innerHTML = '\u2714\ufe0f Correct! You selected ' + selectedText + ' \u2014 the right pair.';
+            } else {
+                resultDiv.style.background = '#FDECEB';
+                resultDiv.style.border = '2px solid #F5C6C0';
+                resultDiv.style.color = '#B91C1C';
+                var correctText = '\u201c' + q.correct[0] + '\u201d and \u201c' + q.correct[1] + '\u201d';
+                resultDiv.innerHTML = '\u274c Incorrect. You selected ' + selectedText + '. The correct pair is ' + correctText + '. See the Expert Review below.';
+            }
+            resultDiv.style.display = 'block';
+
+            var panel = document.getElementById('expert-review-panel');
+            panel.removeAttribute('hidden');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            restartBtn.classList.remove('hidden');
+            restartBtn.removeAttribute('aria-hidden');
+
+            if (isCorrect) {
+                announce('Correct! You selected ' + selectedText + '. That\'s the right pair.');
+                launchConfetti();
+            } else {
+                announce('Incorrect. You selected ' + selectedText + '. The correct pair is ' + q.correct.join(' and ') + '. See the Expert Review for an explanation.');
+            }
+
+            // Kick off Step 4 AI journey recap
+            if (isAIReady()) {
+                var qIndexAtCall = currentQuestionIndex;
+                showCoachLoading(4);
+                gradeStep4().then(function(result) {
+                    if (!result) { hideCoach(4); return; }
+                    showStep4CoachResult(result.summary, result.wordsToReview || []);
+                    var res = sessionData.questionResults[qIndexAtCall];
+                    if (res && Array.isArray(result.wordsToReview)) {
+                        res.aiWordsToReview = result.wordsToReview.slice();
+                        saveSession();
+                    }
+                    sendEvent('ai_grade_step4', {
+                        questionIndex: qIndexAtCall,
+                        summary: result.summary,
+                        wordsToReview: result.wordsToReview
+                    });
+                }).catch(function(err) {
+                    hideCoach(4);
+                    console.warn('[AI Coach] Step 4 grading failed:', err);
+                });
+            } else {
+                hideCoach(4);
+            }
+        }
+
+        function handleSelectNew() {
+            sendEvent('try_again', {
+                questionIndex: currentQuestionIndex,
+                previousSelections: selectedOptions.slice()
+            });
+            currentQuestionFirstAttempt = false;
+            document.getElementById('step3-feedback').classList.remove('active');
+            document.getElementById('selection-warning').classList.remove('visible');
+            selectedOptions = [];
+            document.querySelectorAll('.option-card').forEach(function(card) {
+                card.classList.remove('selected');
+                card.setAttribute('aria-pressed', 'false');
+            });
+            selectionStatus.textContent = '0 of 2 choices selected.';
+            goToStep(3);
+        }
+
+        function launchConfetti() {
+            var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (prefersReducedMotion) return;
+
+            var colors = ['#240F6E', '#005DE8', '#C0DF16', '#FFC82E', '#DE1B90', '#287D21'];
+            var originX = window.innerWidth / 2;
+            var originY = window.innerHeight * 0.6;
+            var count = 0;
+            var total = 90;
+            var confettiElements = [];
+            var burstTimer = null;
+            var animationRunning = true;
+
+            function cleanup() {
+                animationRunning = false;
+                if (burstTimer) clearTimeout(burstTimer);
+                confettiElements.forEach(function(el) { if (el.parentNode) el.remove(); });
+                confettiElements = [];
+            }
+
+            setTimeout(cleanup, 4500);
+
+            function burst() {
+                if (count >= total || !animationRunning) return;
+                var batch = Math.min(6, total - count);
+                for (var i = 0; i < batch; i++) {
+                    var el = document.createElement('div');
+                    var size = Math.random() * 9 + 5;
+                    el.style.cssText = [
+                        'position:fixed',
+                        'width:' + size + 'px',
+                        'height:' + size + 'px',
+                        'background:' + colors[Math.floor(Math.random() * colors.length)],
+                        'border-radius:' + (Math.random() > 0.5 ? '50%' : '2px'),
+                        'left:' + originX + 'px',
+                        'top:' + originY + 'px',
+                        'pointer-events:none',
+                        'z-index:9999',
+                        'opacity:1',
+                        'transform:translate(-50%,-50%)'
+                    ].join(';');
+                    document.body.appendChild(el);
+                    confettiElements.push(el);
+                    var angle = Math.random() * Math.PI * 2;
+                    var speed = Math.random() * 380 + 120;
+                    var vx = Math.cos(angle) * speed;
+                    var vy = Math.sin(angle) * speed - 220;
+                    var gravity = 520;
+                    var startTime = performance.now();
+                    var duration = Math.random() * 800 + 700;
+                    (function(elem, vx, vy, startTime, duration) {
+                        function animate(now) {
+                            if (!animationRunning) { elem.remove(); return; }
+                            var t = (now - startTime) / 1000;
+                            if (t > duration / 1000) { elem.remove(); return; }
+                            var x = vx * t;
+                            var y = vy * t + 0.5 * gravity * t * t;
+                            var opacity = Math.max(0, 1 - t / (duration / 1000));
+                            elem.style.transform = 'translate(calc(-50% + ' + x + 'px), calc(-50% + ' + y + 'px)) rotate(' + (t * 400) + 'deg)';
+                            elem.style.opacity = opacity;
+                            requestAnimationFrame(animate);
+                        }
+                        requestAnimationFrame(animate);
+                    })(el, vx, vy, startTime, duration);
+                }
+                count += batch;
+                if (count < total && animationRunning) burstTimer = setTimeout(burst, 60);
+            }
+            burst();
+        }
+
+        nextBtn.onclick = handleNext;
+        prevBtn.onclick = function() {
+            if (currentStep > 1) goToStep(currentStep - 1);
+        };
+        restartBtn.onclick = function() {
+            var nextIndex = currentQuestionIndex + 1;
+            if (nextIndex >= questions.length) {
+                showCompletionScreen();
+            } else {
+                currentQuestionIndex = nextIndex;
+                loadQuestion();
+            }
+        };
+
+        function showCompletionScreen() {
+            accumulateStepTime();
+            document.getElementById('workspace-area').style.display = 'none';
+            document.querySelector('.kaplan-card.progress-stepper').style.display = 'none';
+            generateCompletionStats();
+
+            var results = sessionData.questionResults.filter(function(r) { return r; });
+            sendEvent('session_complete', {
+                totalQuestions: results.length,
+                correctFirstTry: results.filter(function(r) { return r.correctFirstTry; }).length,
+                correctAny: results.filter(function(r) { return r.correct; }).length,
+                perQuestion: results.map(function(r, i) {
+                    return { questionIndex: i, clueType: r.clueType, correctFirstTry: !!r.correctFirstTry, stepTimesMs: r.stepTimes };
+                })
+            });
+
+            clearSession();
+            var screen = document.getElementById('completion-screen');
+            screen.removeAttribute('hidden');
+            screen.focus();
+            announce('Congratulations! You have completed all questions.');
+        }
+
+        function aggregateWordsToReview(results) {
+            var byWord = {};
+            var order = [];
+            results.forEach(function(r, i) {
+                if (!r) return;
+                // Prefer the AI's curated list; fall back to all wrong selections if AI didn't run
+                var source = (Array.isArray(r.aiWordsToReview) && r.aiWordsToReview.length > 0)
+                    ? r.aiWordsToReview
+                    : (Array.isArray(r.wrongSelections) ? r.wrongSelections : []);
+                source.forEach(function(w) {
+                    if (!w) return;
+                    var key = String(w).toLowerCase();
+                    if (!byWord[key]) {
+                        byWord[key] = { word: w, questions: [] };
+                        order.push(key);
+                    }
+                    var qNum = i + 1;
+                    if (byWord[key].questions.indexOf(qNum) === -1) {
+                        byWord[key].questions.push(qNum);
+                    }
+                });
+            });
+            return order.map(function(k) { return byWord[k]; });
+        }
+
+        function generateCompletionStats() {
+            var results = sessionData.questionResults.filter(function(r) { return r; });
+            var totalQuestions = results.length;
+            var correctFirstTryCount = results.filter(function(r) { return r.correctFirstTry; }).length;
+
+            document.getElementById('score-number').textContent = correctFirstTryCount;
+            document.getElementById('score-denom').textContent = '/' + totalQuestions;
+
+            // Clue-type breakdown
+            var byClueType = {};
+            var firstWrongQuestionNum = null;
+            results.forEach(function(r, i) {
+                var type = r.clueType || 'other';
+                if (!byClueType[type]) byClueType[type] = { correct: 0, total: 0, wrongQuestionNums: [] };
+                byClueType[type].total++;
+                if (r.correctFirstTry) byClueType[type].correct++;
+                else {
+                    byClueType[type].wrongQuestionNums.push(i + 1);
+                    if (firstWrongQuestionNum === null) firstWrongQuestionNum = i + 1;
+                }
+            });
+
+            var clueListEl = document.getElementById('clue-breakdown-list');
+            clueListEl.innerHTML = '';
+            Object.keys(byClueType).forEach(function(type) {
+                var data = byClueType[type];
+                var mastered = data.correct === data.total;
+                var li = document.createElement('li');
+                li.className = 'clue-row ' + (mastered ? 'mastered' : 'needs-work');
+                var nameSpan = document.createElement('span');
+                nameSpan.className = 'clue-name';
+                nameSpan.textContent = clueTypeLabels[type] || type;
+                var scoreSpan = document.createElement('span');
+                scoreSpan.className = 'clue-score';
+                scoreSpan.textContent = data.correct + ' / ' + data.total;
+                li.appendChild(nameSpan);
+                li.appendChild(scoreSpan);
+                clueListEl.appendChild(li);
+            });
+
+            // Vocabulary to review (aggregate across all questions)
+            var wordsToReview = aggregateWordsToReview(results);
+            var wtrSub = document.getElementById('words-to-review-subsection');
+            var wtrList = document.getElementById('words-to-review-list');
+            wtrList.innerHTML = '';
+            if (wordsToReview.length === 0) {
+                wtrSub.setAttribute('hidden', '');
+            } else {
+                wtrSub.removeAttribute('hidden');
+                wordsToReview.forEach(function(item) {
+                    var chip = document.createElement('span');
+                    chip.className = 'review-word-chip';
+                    var word = document.createElement('strong');
+                    word.textContent = item.word;
+                    chip.appendChild(word);
+                    var src = document.createElement('span');
+                    src.className = 'review-word-source';
+                    src.textContent = '\u00b7 Q' + item.questions.join(',Q');
+                    chip.appendChild(src);
+                    wtrList.appendChild(chip);
+                });
+            }
+
+            // Takeaway — AI-generated session recap if available, static fallback otherwise.
+            var takeawayEl = document.getElementById('takeaway-text');
+            var staticTakeaway = buildStaticTakeaway(results);
+
+            if (isAIReady()) {
+                takeawayEl.innerHTML = '<em style="opacity:0.75;">Preparing your session recap<span class="ai-coach-loading-dots"></span></em>';
+                gradeSession(results).then(function(res) {
+                    if (res && typeof res.summary === 'string' && res.summary.trim()) {
+                        takeawayEl.textContent = res.summary.trim();
+                        sendEvent('ai_grade_session', {
+                            totalQuestions: results.length,
+                            summary: res.summary
+                        });
+                    } else {
+                        takeawayEl.innerHTML = staticTakeaway;
+                    }
+                }).catch(function(err) {
+                    console.warn('[AI Coach] Session recap failed:', err);
+                    takeawayEl.innerHTML = staticTakeaway;
+                });
+            } else {
+                takeawayEl.innerHTML = staticTakeaway;
+            }
+        }
+
+        // Static takeaway logic — used as fallback when AI is off or unavailable.
+        // Generic and positive; only comments on performance for a clear "nailed" moment or Q1→QN improvement.
+        function buildStaticTakeaway(results) {
+            var parts = ['<strong>Nice work in this session.</strong>'];
+            var nailedIndex = findNailedQuestion(results);
+            if (nailedIndex !== null) {
+                parts.push('You totally nailed both the clues and the prediction on <strong>question ' + (nailedIndex + 1) + '</strong> \u2014 that was great.');
+            } else {
+                var improvement = detectImprovement(results);
+                if (improvement) parts.push(improvement);
+            }
+            parts.push('Keep working on reading for clues and making strong predictions. As you work on more Sentence Equivalence questions, move through each step of the method until it becomes second nature.');
+            return parts.join(' ');
+        }
+
+        // A question is "nailed" when the student demonstrated the full method
+        // — found the pivot AND key clue, made a meaning-matching prediction,
+        // AND picked the correct pair on first try. Only promotes AI-backed
+        // questions so we're confident about the callout.
+        function findNailedQuestion(results) {
+            for (var i = 0; i < results.length; i++) {
+                var r = results[i];
+                if (!r) continue;
+                var ai1 = r.aiStep1;
+                var ai2 = r.aiStep2;
+                if (ai1 && ai2 && ai1.pivotFound && ai1.clueFound && ai2.meaningMatch && r.correctFirstTry) {
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        // Detect improvement from Q1 to Q5 on predictions AND/OR correctness.
+        // Returns a coaching-friendly string, or null if no clear improvement.
+        function detectImprovement(results) {
+            if (!results || results.length < 2) return null;
+            var first = results[0];
+            var last = results[results.length - 1];
+            if (!first || !last) return null;
+
+            var predictionImproved = first.aiStep2 && last.aiStep2 &&
+                                     first.aiStep2.meaningMatch === false &&
+                                     last.aiStep2.meaningMatch === true;
+            var accuracyImproved   = first.correctFirstTry === false && last.correctFirstTry === true;
+
+            if (predictionImproved && accuracyImproved) {
+                return 'And your predictions and selections both sharpened from question 1 to question ' + results.length + ' \u2014 that\'s the method clicking into place.';
+            }
+            if (predictionImproved) {
+                return 'Your predictions got sharper from question 1 to question ' + results.length + ' \u2014 that\'s the method clicking into place.';
+            }
+            if (accuracyImproved) {
+                return 'Your answer selections got stronger from question 1 to question ' + results.length + ' \u2014 that\'s the method clicking into place.';
+            }
+            return null;
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'TEXTAREA') return;
         });
-    } catch (err) {
-        clearTimeout(timeoutId);
-        const aborted = err && err.name === 'AbortError';
-        return json({ error: aborted ? 'Gemini request timed out' : 'Gemini request failed', detail: String(err) }, 504);
-    }
-    clearTimeout(timeoutId);
+        function toggleHint(btn) {
+            var expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', !expanded);
+            var body = document.getElementById(btn.getAttribute('aria-controls'));
+            if (expanded) { body.setAttribute('hidden', ''); }
+            else { body.removeAttribute('hidden'); }
+        }
 
-    if (!geminiResp.ok) {
-        const errText = await geminiResp.text().catch(() => '');
-        return json({
-            error: 'Gemini API error',
-            upstreamStatus: geminiResp.status,
-            detail: errText.slice(0, 500)
-        }, 502);
-    }
+        window.onload = function() {
+            loadSettings();
+            initSession();
+            loadSession();
+            flushTelemetryQueue();
+            sendEvent('session_start', {
+                resumed: currentQuestionIndex > 0 || sessionData.questionResults.length > 0,
+                startingQuestionIndex: currentQuestionIndex
+            });
+            loadQuestion();
 
-    let data;
-    try {
-        data = await geminiResp.json();
-    } catch {
-        return json({ error: 'Invalid Gemini response (not JSON)' }, 502);
-    }
-
-    const candidate = data?.candidates?.[0];
-    const finishReason = candidate?.finishReason || 'UNKNOWN';
-    const text = candidate?.content?.parts?.[0]?.text;
-
-    if (!text) {
-        console.error('[grade] Empty Gemini response. finishReason=' + finishReason, JSON.stringify(data).slice(0, 500));
-        return json({ error: 'Empty Gemini response', finishReason }, 502);
-    }
-
-    const parsed = tryParseJson(text);
-    if (!parsed) {
-        console.error('[grade] Non-JSON Gemini text. finishReason=' + finishReason + ' text=' + text.slice(0, 500));
-        return json({
-            error: 'Gemini returned non-JSON text',
-            finishReason,
-            text: text.slice(0, 500)
-        }, 502);
-    }
-
-    return json(parsed, 200);
-};
-
-// Defensive JSON parser: handles Gemini's occasional markdown-fenced or
-// preamble-wrapped responses even when responseMimeType is set to application/json.
-function tryParseJson(raw) {
-    // 1. Straight parse
-    try { return JSON.parse(raw); } catch {}
-
-    let s = String(raw).trim();
-
-    // 2. Strip markdown code fences (```json ... ``` or ``` ... ```)
-    s = s.replace(/^```(?:json|JSON)?\s*\n?/, '').replace(/\n?\s*```\s*$/, '').trim();
-    try { return JSON.parse(s); } catch {}
-
-    // 3. Extract substring from first { to last } (handles preamble/postamble)
-    const first = s.indexOf('{');
-    const last = s.lastIndexOf('}');
-    if (first !== -1 && last > first) {
-        const candidate = s.substring(first, last + 1);
-        try { return JSON.parse(candidate); } catch {}
-    }
-
-    return null;
-}
-
-function json(body, status = 200) {
-    return new Response(JSON.stringify(body), {
-        status,
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-    });
-}
-
-function buildPromptAndSchema(step, payload) {
-    const { sentence, rubric, studentInput, correctPair, selections, clueAnalysis, prediction } = payload;
-
-    if (step === 1) {
-        const prompt =
-            'You are a GRE verbal coach evaluating a student\'s clue analysis for a Sentence Equivalence question.\n\n' +
-            `SENTENCE: "${sentence}"\n` +
-            `EXPECTED PIVOT (structural signal word): "${rubric.pivot || ''}"\n` +
-            `EXPECTED KEY CLUE (descriptive phrase that defines the blank): "${rubric.keyClue || ''}"\n\n` +
-            `STUDENT ANALYSIS: "${studentInput}"\n\n` +
-            'Evaluate leniently — accept synonyms and paraphrases.\n\n' +
-            'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
-            '- pivotFound (boolean): did the student identify the pivot (or equivalent)?\n' +
-            '- clueFound (boolean): did the student identify the key clue (or equivalent phrase)?\n' +
-            '- nudge (string, 22 words max): one coaching sentence addressed to "you". Be specific about what they got and what to push for. Do not reveal the answer.';
-        const schema = {
-            type: 'object',
-            properties: {
-                pivotFound: { type: 'boolean' },
-                clueFound: { type: 'boolean' },
-                nudge: { type: 'string' }
-            },
-            required: ['pivotFound', 'clueFound', 'nudge']
+            // Close settings modal on Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && document.getElementById('settings-modal').classList.contains('active')) {
+                    closeSettings();
+                }
+            });
         };
-        return { prompt, schema };
-    }
-
-    if (step === 2) {
-        const targetMeanings = Array.isArray(rubric.targetMeanings) ? rubric.targetMeanings : [];
-        const prompt =
-            'You are a GRE verbal coach evaluating a student\'s predicted word for a Sentence Equivalence blank.\n\n' +
-            `SENTENCE: "${sentence}"\n` +
-            `TARGET MEANINGS (any word with a similar meaning is correct): ${JSON.stringify(targetMeanings)}\n\n` +
-            `STUDENT PREDICTION: "${studentInput}"\n\n` +
-            'Evaluate leniently — the prediction just needs to be semantically close to one of the target meanings.\n\n' +
-            'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
-            '- meaningMatch (boolean): does the prediction match the required meaning?\n' +
-            '- nudge (string, 22 words max): one coaching sentence addressed to "you". If correct, affirm briefly. If off, hint at the direction without revealing the answer.';
-        const schema = {
-            type: 'object',
-            properties: {
-                meaningMatch: { type: 'boolean' },
-                nudge: { type: 'string' }
-            },
-            required: ['meaningMatch', 'nudge']
-        };
-        return { prompt, schema };
-    }
-
-    // step === 4: holistic recap of the full question journey
-    const correctSet = new Set(correctPair);
-    const numCorrect = selections.filter(s => correctSet.has(s)).length;
-    const incorrect = selections.filter(s => !correctSet.has(s));
-
-    const prompt =
-        'You are a GRE verbal coach giving a student a brief, personalized recap after they just submitted their answer to a Sentence Equivalence question. The Kaplan Method has four steps: (1) find clues, (2) predict a word, (3) match to answer choices, (4) confirm by reading back.\n\n' +
-        `SENTENCE: "${sentence}"\n` +
-        `CORRECT ANSWER PAIR: ${JSON.stringify(correctPair)}\n` +
-        `STUDENT'S CLUE ANALYSIS (step 1): "${clueAnalysis || '(none entered)'}"\n` +
-        `STUDENT'S PREDICTION (step 2): "${prediction || '(none entered)'}"\n` +
-        `STUDENT'S FINAL SELECTIONS (step 3/4): ${JSON.stringify(selections)}\n` +
-        `NUMBER CORRECT: ${numCorrect} of 2\n` +
-        (incorrect.length > 0 ? `INCORRECT SELECTION(S): ${JSON.stringify(incorrect)}\n` : '') +
-        '\n' +
-        'Write a 2-sentence recap (40 words max total) that:\n' +
-        '- Acknowledges what they did well across the four steps (clues, prediction, matching).\n' +
-        '- Calls out the specific gap if any — weak clue analysis, off-target prediction, or vocabulary issue with a wrong selection.\n' +
-        '- References their actual prediction word when explaining why a wrong pick was off (e.g., "X doesn\'t match your prediction of Y").\n' +
-        '- Is encouraging but honest. Address the student as "you".\n\n' +
-        'Also return wordsToReview: from their incorrect selections only, list any words worth adding to a GRE vocab study list (0-2 items, skip truly common words like "clear" or "simple"). If all selections were correct, return an empty array.\n\n' +
-        'Output ONLY a JSON object. No preamble, no markdown fences.';
-    const schema = {
-        type: 'object',
-        properties: {
-            summary: { type: 'string' },
-            wordsToReview: { type: 'array', items: { type: 'string' } }
-        },
-        required: ['summary', 'wordsToReview']
-    };
-    return { prompt, schema };
-}
+    </script>
+</body>
+</html>
