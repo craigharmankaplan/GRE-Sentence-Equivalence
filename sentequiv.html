@@ -341,10 +341,10 @@
 
                 <div class="settings-row">
                     <div style="flex:1;">
-                        <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);">AI grading (Steps 1 &amp; 2)</label>
-                        <div style="font-size:12px;color:var(--kaplan-slate);margin-top:4px;">Sends student input to Gemini (via the proxy) for a one-line coaching nudge.</div>
+                        <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);">AI Coach</label>
+                        <div style="font-size:12px;color:var(--kaplan-slate);margin-top:4px;">Personalized coaching via the proxy: clue analysis (Step 1), prediction check (Step 2), and a full-journey recap after Check My Answer (Step 4).</div>
                     </div>
-                    <button id="ai-toggle" class="toggle-switch" role="switch" aria-checked="false" aria-label="Enable AI grading" onclick="toggleAI()"></button>
+                    <button id="ai-toggle" class="toggle-switch" role="switch" aria-checked="false" aria-label="Enable AI coaching" onclick="toggleAI()"></button>
                 </div>
 
                 <div class="settings-field">
@@ -945,6 +945,29 @@
             });
         }
 
+        function gradeSession(results) {
+            if (!isAIReady() || !Array.isArray(results) || results.length === 0) return Promise.resolve(null);
+            // Build a compact per-question payload from what we've tracked
+            var payloadQuestions = results.map(function(r, i) {
+                var q = questions[i] || {};
+                return {
+                    sentence: q.sentence || '',
+                    correctPair: q.correct || [],
+                    clueAnalysis: (r && r.clueAnalysisText) || '',
+                    prediction: (r && r.predictionText) || '',
+                    selections: (r && r.selections) || [],
+                    correctFirstTry: !!(r && r.correctFirstTry),
+                    aiStep1: (r && r.aiStep1) || null,
+                    aiStep2: (r && r.aiStep2) || null
+                };
+            });
+            return callGradingProxy({
+                step: 5,
+                questions: payloadQuestions,
+                model: settings.model
+            });
+        }
+
         function showStep4CoachResult(summary, wordsToReview) {
             var card = document.getElementById('step4-ai-coach');
             var body = document.getElementById('step4-ai-coach-body');
@@ -1327,6 +1350,10 @@
                     document.getElementById('step1-feedback').classList.add('active');
                     announce('Expert clue analysis: ' + q.clues);
 
+                    // Persist student text for the session-recap call later
+                    if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                    sessionData.questionResults[currentQuestionIndex].clueAnalysisText = clueInput.value.trim();
+
                     sendEvent('step_complete', {
                         questionIndex: currentQuestionIndex,
                         stepNumber: 1,
@@ -1371,6 +1398,9 @@
                     document.getElementById('step2-feedback-text').textContent = q.prediction;
                     document.getElementById('step2-feedback').classList.add('active');
                     announce('Expert prediction: ' + q.prediction);
+
+                    if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                    sessionData.questionResults[currentQuestionIndex].predictionText = predictionInput.value.trim();
 
                     sendEvent('step_complete', {
                         questionIndex: currentQuestionIndex,
@@ -1813,11 +1843,35 @@
                 });
             }
 
-            // Takeaway — generic, positive, method-focused.
-            // Only mention performance for a clear "nailed it" moment or Q1→Q5 improvement.
+            // Takeaway — AI-generated session recap if available, static fallback otherwise.
             var takeawayEl = document.getElementById('takeaway-text');
-            var parts = ['<strong>Nice work in this session.</strong>'];
+            var staticTakeaway = buildStaticTakeaway(results);
 
+            if (isAIReady()) {
+                takeawayEl.innerHTML = '<em style="opacity:0.75;">Preparing your session recap<span class="ai-coach-loading-dots"></span></em>';
+                gradeSession(results).then(function(res) {
+                    if (res && typeof res.summary === 'string' && res.summary.trim()) {
+                        takeawayEl.textContent = res.summary.trim();
+                        sendEvent('ai_grade_session', {
+                            totalQuestions: results.length,
+                            summary: res.summary
+                        });
+                    } else {
+                        takeawayEl.innerHTML = staticTakeaway;
+                    }
+                }).catch(function(err) {
+                    console.warn('[AI Coach] Session recap failed:', err);
+                    takeawayEl.innerHTML = staticTakeaway;
+                });
+            } else {
+                takeawayEl.innerHTML = staticTakeaway;
+            }
+        }
+
+        // Static takeaway logic — used as fallback when AI is off or unavailable.
+        // Generic and positive; only comments on performance for a clear "nailed" moment or Q1→QN improvement.
+        function buildStaticTakeaway(results) {
+            var parts = ['<strong>Nice work in this session.</strong>'];
             var nailedIndex = findNailedQuestion(results);
             if (nailedIndex !== null) {
                 parts.push('You totally nailed both the clues and the prediction on <strong>question ' + (nailedIndex + 1) + '</strong> \u2014 that was great.');
@@ -1825,10 +1879,8 @@
                 var improvement = detectImprovement(results);
                 if (improvement) parts.push(improvement);
             }
-
             parts.push('Keep working on reading for clues and making strong predictions. As you work on more Sentence Equivalence questions, move through each step of the method until it becomes second nature.');
-
-            takeawayEl.innerHTML = parts.join(' ');
+            return parts.join(' ');
         }
 
         // A question is "nailed" when the student demonstrated the full method
