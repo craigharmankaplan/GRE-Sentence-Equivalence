@@ -179,15 +179,16 @@
 
         /* Student-answer panel (Step 1 & 2 side-by-side compare) */
         /* Step 3 prediction recall (student vs expert) */
-        .prediction-recall { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 4px; }
+        .prediction-recall { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px; }
         @media (min-width: 640px) { .prediction-recall { grid-template-columns: 1fr 1fr; } }
         .prediction-pill { padding: 14px 16px; border-radius: 12px; border: 1px solid transparent; }
-        .prediction-pill.student { background: var(--kaplan-bg); border-color: var(--kaplan-border); }
+        .prediction-pill.student { background: #FDECEB; border-color: #F5C6C0; }
         .prediction-pill.expert { background: #E8EFFE; border-color: #B3C9F8; }
         .prediction-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 6px; }
-        .prediction-pill.student .prediction-label { color: var(--kaplan-slate); }
+        .prediction-pill.student .prediction-label { color: #B91C1C; }
         .prediction-pill.expert .prediction-label { color: var(--text-on-blue-bg); }
         .prediction-text { font-size: 15px; line-height: 1.5; color: var(--kaplan-charcoal); margin: 0; }
+        .prediction-pill.student .prediction-text { color: #B91C1C; }
         .prediction-pill.expert .prediction-text { color: var(--text-on-blue-bg); }
         .prediction-text:empty::before { content: "(no prediction captured)"; color: #9CA3AF; font-style: italic; }
 
