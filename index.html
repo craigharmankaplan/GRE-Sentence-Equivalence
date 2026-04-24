@@ -6,738 +6,225 @@
     <title>GRE Sentence Equivalence Scaffolder — Kaplan Method</title>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ══════════════════════════════════════════════════
-           Reset & CSS Variables (Kaplan Brand Palette)
-           ══════════════════════════════════════════════════ */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        /* Use focus-visible only — suppress outline on mouse/programmatic focus */
         :focus { outline: none; }
         :focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
-
         :root {
-            /* Primary purple + official shades */
             --kaplan-purple: #240F6E;
             --kaplan-purple-shade1: #503F8B;
             --kaplan-purple-shade2: #7C6CA7;
             --kaplan-purple-shade3: #A79FC5;
-            /* Legacy alias for dark purple panels */
             --kaplan-purple-dark: #503F8B;
-            /* Secondary colors */
             --kaplan-blue: #005DE8;
             --kaplan-green: #287D21;
             --kaplan-chartreuse: #C0DF16;
             --kaplan-yellow: #FFC82E;
             --kaplan-red: #D6083B;
             --kaplan-pink: #DE1B90;
-            /* Neutrals */
             --kaplan-charcoal: #2D2D2D;
             --kaplan-slate: #6B7280;
             --kaplan-border: #E5E7EB;
             --kaplan-bg: #F9FAFB;
             --kaplan-white: #FFFFFF;
-
-            /* ── WCAG-safe text colors for tinted backgrounds ── */
-            --text-on-purple-bg: #1E0B56;   /* on #F0EDFA → 12.5:1 */
-            --text-on-blue-bg: #003A92;     /* on #E8EFFE → 8.0:1 */
-            --text-on-green-bg: #145C30;    /* on #EAFAF1 → 7.6:1 */
-            --text-on-yellow-bg: #6B4F00;   /* on #FFF8EB → 7.0:1 */
-
-            /* ── Focus ring (Kaplan spec: #005DE8) ── */
+            --text-on-purple-bg: #1E0B56;
+            --text-on-blue-bg: #003A92;
+            --text-on-green-bg: #145C30;
+            --text-on-yellow-bg: #6B4F00;
             --focus-ring: 2px solid var(--kaplan-blue);
             --focus-offset: 2px;
         }
-
-        /* ══════════════════════════════════════════════════
-           Reduced Motion
-           ══════════════════════════════════════════════════ */
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
         }
-
-        /* ══════════════════════════════════════════════════
-           Base Typography (Kaplan Brand Spec)
-           ══════════════════════════════════════════════════ */
-        body {
-            font-family: 'Open Sans', 'Arial', sans-serif;
-            background-color: var(--kaplan-bg);
-            color: var(--kaplan-charcoal);
-            min-height: 100vh;
-            line-height: 1.6;
-            font-size: 16px;  /* Kaplan minimum for body text */
-        }
-
-        h1, h2, h3, h4, .headline {
-            font-family: 'Merriweather', 'Georgia', serif;
-        }
-
-        .mono {
-            font-family: 'Open Sans', 'Arial', monospace;
-        }
-
+        body { font-family: 'Open Sans', 'Arial', sans-serif; background-color: var(--kaplan-bg); color: var(--kaplan-charcoal); min-height: 100vh; line-height: 1.6; font-size: 16px; }
+        h1, h2, h3, h4, .headline { font-family: 'Merriweather', 'Georgia', serif; }
+        .mono { font-family: 'Open Sans', 'Arial', monospace; }
         button { font-family: 'Open Sans', 'Arial', sans-serif; }
-
-        /* ══════════════════════════════════════════════════
-           Layout
-           ══════════════════════════════════════════════════ */
-        .page-wrap {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 32px 16px;
-        }
-
-        /* ══════════════════════════════════════════════════
-           Screen-Reader Only + Skip Link
-           (WCAG 2.4.1 — Bypass Blocks)
-           ══════════════════════════════════════════════════ */
-        .sr-only {
-            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
-        }
-        a.sr-only:focus {
-            position: absolute; width: auto; height: auto; padding: 8px 16px; margin: 0;
-            overflow: visible; clip: auto; white-space: normal;
-            z-index: 100; top: 8px; left: 8px;
-            background: var(--kaplan-white); color: var(--kaplan-purple);
-            border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-weight: 600; text-decoration: none;
-        }
-
-
-        /* ══════════════════════════════════════════════════
-           Page Header
-           ══════════════════════════════════════════════════ */
-        .page-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        .page-header h1 {
-            font-size: 16px;
-            font-weight: 300;
-            color: var(--kaplan-purple);
-            line-height: 1.3;
-            letter-spacing: -0.01em;
-        }
-        .page-header .subtitle {
-            margin-top: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--kaplan-slate);
-        }
+        .page-wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
+        a.sr-only:focus { position: absolute; width: auto; height: auto; padding: 8px 16px; margin: 0; overflow: visible; clip: auto; white-space: normal; z-index: 100; top: 8px; left: 8px; background: var(--kaplan-white); color: var(--kaplan-purple); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-weight: 600; text-decoration: none; }
+        .page-header { text-align: center; margin-bottom: 32px; }
+        .page-header h1 { font-size: 16px; font-weight: 300; color: var(--kaplan-purple); line-height: 1.3; letter-spacing: -0.01em; }
+        .page-header .subtitle { margin-top: 8px; font-size: 16px; font-weight: 500; color: var(--kaplan-slate); }
         .swoosh-center { display: flex; justify-content: center; margin-top: 12px; }
-
-        /* ══════════════════════════════════════════════════
-           Kaplan Card
-           ══════════════════════════════════════════════════ */
-        .kaplan-card {
-            background: var(--kaplan-white);
-            border: 1px solid var(--kaplan-border);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-
-        /* ══════════════════════════════════════════════════
-           Progress Stepper — 4-box style
-           ══════════════════════════════════════════════════ */
-        .progress-stepper {
-            padding: 16px 20px;
-            margin-bottom: 32px;
-        }
-        .step-boxes {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .step-box {
-            flex: 1;
-            text-align: center;
-            padding: 10px 6px;
-            border-radius: 10px;
-            border: 2px solid #9CA3AF;
-            background: var(--kaplan-white);
-            font-family: 'Open Sans', 'Arial', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--kaplan-charcoal);
-            transition: all 0.3s ease;
-            transform: scale(0.92);
-            opacity: 0.75;
-            cursor: default;
-            user-select: none;
-        }
-        .step-box.active {
-            background: var(--kaplan-blue);
-            border-color: var(--kaplan-blue);
-            color: #FFFFFF;
-            transform: scale(1);
-            opacity: 1;
-            box-shadow: 0 4px 12px rgba(0,93,232,0.35);
-            font-size: 15px;
-            font-weight: 800;
-            letter-spacing: 0.18em;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.15);
-        }
-
-        /* ══════════════════════════════════════════════════
-           Main Workspace
-           ══════════════════════════════════════════════════ */
-        .workspace {
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(36,15,110,0.08);
-            overflow: hidden;
-            min-height: 550px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ══════════════════════════════════════════════════
-           Question Header (purple hero)
-           ══════════════════════════════════════════════════ */
-        .question-header {
-            padding: 32px;
-            background: var(--kaplan-purple);
-            position: relative;
-            overflow: hidden;
-        }
-        .question-header::before {
-            content: '';
-            position: absolute;
-            width: 140%;
-            height: 300px;
-            border-radius: 50%;
-            border-top: 3px solid rgba(255,255,255,0.12);
-            left: -20%;
-            bottom: -180px;
-            pointer-events: none;
-        }
-        .question-header .label {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: rgba(255,255,255,0.85);  /* WCAG AA: ~11.5:1 on #240F6E */
-            margin-bottom: 16px;
-        }
-        .question-header .sentence {
-            font-size: 20px;
-            line-height: 1.6;
-            color: var(--kaplan-white);  /* 13.5:1 on #240F6E ✓ */
-            font-family: 'Open Sans', 'Arial', sans-serif;
-        }
-
-        /* ══════════════════════════════════════════════════
-           Steps Area
-           ══════════════════════════════════════════════════ */
+        .kaplan-card { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .progress-stepper { padding: 16px 20px; margin-bottom: 32px; }
+        .step-boxes { display: flex; gap: 8px; align-items: center; }
+        .step-box { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; border: 2px solid #9CA3AF; background: var(--kaplan-white); font-family: 'Open Sans', 'Arial', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kaplan-charcoal); transition: all 0.3s ease; transform: scale(0.92); opacity: 0.75; cursor: default; user-select: none; }
+        .step-box.active { background: var(--kaplan-blue); border-color: var(--kaplan-blue); color: #FFFFFF; transform: scale(1); opacity: 1; box-shadow: 0 4px 12px rgba(0,93,232,0.35); font-size: 15px; font-weight: 800; letter-spacing: 0.18em; text-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+        .workspace { border-radius: 20px; box-shadow: 0 8px 30px rgba(36,15,110,0.08); overflow: hidden; min-height: 550px; display: flex; flex-direction: column; }
+        .question-header { padding: 32px; background: var(--kaplan-purple); position: relative; overflow: hidden; }
+        .question-header::before { content: ''; position: absolute; width: 140%; height: 300px; border-radius: 50%; border-top: 3px solid rgba(255,255,255,0.12); left: -20%; bottom: -180px; pointer-events: none; }
+        .question-header .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.85); margin-bottom: 16px; }
+        .question-header .sentence { font-size: 20px; line-height: 1.6; color: var(--kaplan-white); font-family: 'Open Sans', 'Arial', sans-serif; }
         .steps-area { padding: 32px; flex-grow: 1; }
-
         .step-container { display: none; }
-        .step-container.active {
-            display: block;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ══════════════════════════════════════════════════
-           Step Info Boxes
-           All body text ≥ 16px (Kaplan min)
-           All colors WCAG AA verified
-           ══════════════════════════════════════════════════ */
-        .step-info {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 20px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-        }
-        .step-info .icon {
-            flex-shrink: 0;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 2px;
-        }
+        .step-container.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .step-info { display: flex; align-items: flex-start; gap: 16px; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
+        .step-info .icon { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
         .step-info .icon svg { width: 16px; height: 16px; color: white; }
         .step-info h3 { font-size: 16px; font-weight: 700; }
         .step-info p { font-size: 16px; margin-top: 4px; line-height: 1.6; }
-
-        /* Purple step */
         .step-info.purple { background: #F0EDFA; border: 1px solid #DDD6F3; }
         .step-info.purple .icon { background: var(--kaplan-purple); }
         .step-info.purple h3 { color: var(--kaplan-purple); }
         .step-info.purple p { color: var(--text-on-purple-bg); }
-
-        /* Blue step (replaces teal) */
         .step-info.teal { background: #E8EFFE; border: 1px solid #B3C9F8; }
         .step-info.teal .icon { background: var(--kaplan-blue); }
         .step-info.teal h3 { color: var(--text-on-blue-bg); }
         .step-info.teal p { color: var(--text-on-blue-bg); }
-
-        /* Green step */
         .step-info.green { background: #EAFAF1; border: 1px solid #B6ECC9; }
         .step-info.green .icon { background: var(--kaplan-green); }
         .step-info.green h3 { color: var(--text-on-green-bg); }
         .step-info.green p { color: var(--text-on-green-bg); }
-
-        /* Yellow step (replaces gold) */
         .step-info.gold { background: #FFF8EB; border: 1px solid #F5DCA0; }
         .step-info.gold .icon { background: var(--kaplan-yellow); }
         .step-info.gold h3 { color: var(--text-on-yellow-bg); }
         .step-info.gold p { color: var(--text-on-yellow-bg); }
-
-        /* ══════════════════════════════════════════════════
-           Form Elements
-           (WCAG 1.4.3 — Contrast, 1.4.11 — Non-text Contrast,
-            2.4.7 — Focus Visible, 3.3.2 — Labels)
-           ══════════════════════════════════════════════════ */
-        .field-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--kaplan-charcoal);  /* Strong contrast for labels */
-            margin-bottom: 8px;
-        }
-        textarea, input[type="text"] {
-            font-family: 'Open Sans', 'Arial', sans-serif;
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;  /* Kaplan minimum */
-            border: 2px solid var(--kaplan-border);  /* 2px for non-text contrast */
-            border-radius: 12px;
-            background: var(--kaplan-bg);
-            outline: none;
-            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-            color: var(--kaplan-charcoal);
-        }
-        textarea:focus-visible, input[type="text"]:focus-visible {
-            border-color: var(--kaplan-purple);
-            background: var(--kaplan-white);
-            box-shadow: 0 0 0 3px rgba(36,15,110,0.15);
-        }
+        .field-label { display: block; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--kaplan-charcoal); margin-bottom: 8px; }
+        textarea, input[type="text"] { font-family: 'Open Sans', 'Arial', sans-serif; width: 100%; padding: 16px; font-size: 16px; border: 2px solid var(--kaplan-border); border-radius: 12px; background: var(--kaplan-bg); outline: none; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; color: var(--kaplan-charcoal); }
+        textarea:focus-visible, input[type="text"]:focus-visible { border-color: var(--kaplan-purple); background: var(--kaplan-white); box-shadow: 0 0 0 3px rgba(36,15,110,0.15); }
         textarea { height: 112px; resize: vertical; }
-
-        /* Placeholder contrast (WCAG advisory) */
-        textarea::placeholder, input[type="text"]::placeholder {
-            color: #9CA3AF;  /* 2.9:1 on #F9FAFB — acceptable for placeholder per WCAG */
-        }
-
-        /* ══════════════════════════════════════════════════
-           Spacer Utilities
-           ══════════════════════════════════════════════════ */
+        textarea::placeholder, input[type="text"]::placeholder { color: #687482; }
         .stack > * + * { margin-top: 20px; }
         .stack-lg > * + * { margin-top: 24px; }
-
-        /* ══════════════════════════════════════════════════
-           Feedback Boxes
-           WCAG: white text on brand colors, all ≥ 4.5:1
-           Purple #240F6E → white = 13.5:1 ✓
-           Teal #00839E (darkened) → white = 4.6:1 ✓
-           Green #1B8A42 (darkened) → white = 4.6:1 ✓
-           ══════════════════════════════════════════════════ */
-        .feedback-box {
-            display: none;
-            padding: 20px;
-            border-radius: 16px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-            animation: slideIn 0.3s ease-out;
-        }
+        .feedback-box { display: none; padding: 20px; border-radius: 16px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.12); animation: slideIn 0.3s ease-out; }
         .feedback-box.active { display: block; }
-        .feedback-box h4 {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            color: rgba(255,255,255,0.9);  /* High contrast on all feedback bg */
-            margin-bottom: 8px;
-        }
+        .feedback-box h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.9); margin-bottom: 8px; }
         .feedback-box p { font-size: 16px; line-height: 1.6; font-weight: 500; }
-
         .feedback-purple { background: var(--kaplan-purple); }
-        .feedback-teal { background: #0047B3; }   /* Darkened Kaplan blue for WCAG AA on white text */
-        .feedback-green { background: #1B6B17; }  /* Darkened Kaplan green for WCAG AA on white text */
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* ══════════════════════════════════════════════════
-           Options Grid
-           (WCAG 2.1.1 — Keyboard, 4.1.2 — Name/Role/Value)
-           ══════════════════════════════════════════════════ */
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            border: none;
-            padding: 0;
-            margin: 0;
-        }
-        .options-grid legend {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--kaplan-charcoal);
-            margin-bottom: 12px;
-            padding: 0;
-        }
-        @media (min-width: 640px) {
-            .options-grid { grid-template-columns: 1fr 1fr; }
-        }
-
-        .option-card {
-            text-align: left;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--kaplan-charcoal);
-            border: 2px solid var(--kaplan-border);  /* 2px for non-text contrast */
-            border-radius: 12px;
-            background: var(--kaplan-white);
-            cursor: pointer;
-            min-height: 44px;  /* WCAG 2.5.8 — Target Size */
-            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-        }
-        .option-card:hover {
-            border-color: var(--kaplan-blue);
-            box-shadow: 0 2px 8px rgba(0,93,232,0.10);
-        }
-        .option-card.selected {
-            border-color: var(--kaplan-purple);
-            background: #F0EDFA;
-            box-shadow: 0 0 0 2px var(--kaplan-purple);
-        }
-
-        .option-card:focus-visible {
-            outline: var(--focus-ring);
-            outline-offset: var(--focus-offset);
-        }
-
-        /* ══════════════════════════════════════════════════
-           Selection Warning
-           (WCAG 3.3.1 — Error Identification)
-           ══════════════════════════════════════════════════ */
-        .selection-warning {
-            display: none;
-            font-size: 16px;
-            font-weight: 700;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            background: #FDECEB;
-            color: #B91C1C;  /* Dark red: 6.1:1 on #FDECEB ✓ */
-            border: 2px solid #F5C6C0;
-        }
+        .feedback-teal { background: #0047B3; }
+        .feedback-green { background: #1B6B17; }
+        @keyframes slideIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; border: none; padding: 0; margin: 0; }
+        .options-grid legend { font-size: 16px; font-weight: 600; color: var(--kaplan-charcoal); margin-bottom: 12px; padding: 0; }
+        @media (min-width: 640px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+        .option-card { text-align: left; padding: 16px; font-size: 16px; font-weight: 500; color: var(--kaplan-charcoal); border: 2px solid var(--kaplan-border); border-radius: 12px; background: var(--kaplan-white); cursor: pointer; min-height: 44px; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; }
+        .option-card:hover { border-color: var(--kaplan-blue); box-shadow: 0 2px 8px rgba(0,93,232,0.10); }
+        .option-card.selected { border-color: var(--kaplan-purple); background: #F0EDFA; box-shadow: 0 0 0 2px var(--kaplan-purple); }
+        .option-card:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .selection-warning { display: none; font-size: 16px; font-weight: 700; padding: 12px; border-radius: 8px; text-align: center; background: #FDECEB; color: #B91C1C; border: 2px solid #F5C6C0; }
         .selection-warning.visible { display: block; }
-
-        /* ══════════════════════════════════════════════════
-           Accuracy Badge
-           ══════════════════════════════════════════════════ */
-        .accuracy-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: white;
-            font-size: 12px;
-            font-weight: 900;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: -0.02em;
-        }
+        .accuracy-badge { display: inline-block; padding: 2px 8px; background: white; font-size: 12px; font-weight: 900; border-radius: 4px; text-transform: uppercase; letter-spacing: -0.02em; }
         .feedback-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-
-        /* ══════════════════════════════════════════════════
-           Step 4 — Review Boxes
-           ══════════════════════════════════════════════════ */
-        .version-box {
-            padding: 20px;
-            border-radius: 16px;
-            background: var(--kaplan-bg);
-            border: 1px solid var(--kaplan-border);
-        }
-        .version-box h4 {
-            font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--kaplan-slate);
-            margin-bottom: 8px;
-        }
-        .version-box p {
-            font-size: 16px;
-            line-height: 1.6;
-            color: var(--kaplan-charcoal);
-        }
-
-        /* ══════════════════════════════════════════════════
-           Expert Review Panel
-           White on #503F8B = 7.1:1 ✓
-           Blue #005DE8 on #503F8B = 3.4:1 ✓ (large text)
-           rgba(255,255,255,0.85) on #503F8B = ~6:1 ✓
-           ══════════════════════════════════════════════════ */
-        .expert-review {
-            background: var(--kaplan-purple-shade1);
-            border-radius: 16px;
-            color: white;
-            padding: 28px;
-            margin-top: 24px;
-            box-shadow: 0 8px 24px rgba(80,63,139,0.3);
-        }
-        .expert-review h3 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-        }
-        .expert-review .review-label {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.25em;
-            color: var(--kaplan-chartreuse);  /* Chartreuse accent on dark purple */
-            display: block;
-            margin-bottom: 4px;
-        }
-        .expert-review .correct-pair {
-            font-size: 20px;
-            font-weight: 700;
-            font-family: 'Open Sans', 'Arial', sans-serif;
-            color: white;
-        }
-        .expert-review .explanation {
-            margin-top: 8px;
-            line-height: 1.6;
-            font-size: 16px;
-            color: rgba(255,255,255,0.9);
-        }
+        .expert-review { background: var(--kaplan-purple-shade1); border-radius: 16px; color: white; padding: 28px; margin-top: 24px; box-shadow: 0 8px 24px rgba(80,63,139,0.3); }
+        .expert-review h3 { font-size: 20px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+        .expert-review .review-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.25em; color: var(--kaplan-chartreuse); display: block; margin-bottom: 4px; }
+        .expert-review .correct-pair { font-size: 20px; font-weight: 700; font-family: 'Open Sans', 'Arial', sans-serif; color: white; }
+        .expert-review .explanation { margin-top: 8px; line-height: 1.6; font-size: 16px; color: rgba(255,255,255,0.9); }
         .review-sections > * + * { margin-top: 20px; }
-
-        /* ══════════════════════════════════════════════════
-           Footer Controls
-           (WCAG 2.5.8 — Target Size ≥ 44px)
-           ══════════════════════════════════════════════════ */
-        .controls {
-            padding: 32px;
-            background: var(--kaplan-bg);
-            border-top: 1px solid var(--kaplan-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .btn-back {
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 16px;
-            color: var(--kaplan-slate);
-            background: none;
-            border: none;
-            cursor: pointer;
-            transition: color 0.2s;
-            min-height: 44px;
-        }
+        .controls { padding: 32px; background: var(--kaplan-bg); border-top: 1px solid var(--kaplan-border); display: flex; justify-content: space-between; align-items: center; }
+        .btn-back { padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 16px; color: var(--kaplan-slate); background: none; border: none; cursor: pointer; transition: color 0.2s; min-height: 44px; }
         .btn-back:hover { color: var(--kaplan-charcoal); }
-        .btn-back:focus-visible {
-            outline: var(--focus-ring);
-            outline-offset: var(--focus-offset);
-        }
-        .btn-back:disabled { visibility: hidden; }
-
-        .btn-primary {
-            background: var(--kaplan-purple);
-            color: var(--kaplan-white);
-            font-family: 'Merriweather', 'Georgia', serif;
-            font-weight: 700;
-            font-size: 16px;
-            padding: 14px 32px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-            box-shadow: 0 4px 12px rgba(36,15,110,0.20);
-            min-height: 44px;
-        }
+        .btn-back:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .btn-back:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+        .btn-primary { background: var(--kaplan-purple); color: var(--kaplan-white); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 16px; padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 12px rgba(36,15,110,0.20); min-height: 44px; }
         .btn-primary:hover { background: var(--kaplan-purple-shade1); }
-        .btn-primary:focus-visible {
-            outline: var(--focus-ring);
-            outline-offset: var(--focus-offset);
-        }
+        .btn-primary:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
         .btn-primary:active { transform: scale(0.97); }
-
-        .btn-teal {
-            background: var(--kaplan-blue);
-            color: var(--kaplan-white);
-            font-family: 'Merriweather', 'Georgia', serif;
-            font-weight: 700;
-            font-size: 16px;
-            padding: 14px 32px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-            box-shadow: 0 4px 12px rgba(0,93,232,0.20);
-            min-height: 44px;
-        }
+        .btn-teal { background: var(--kaplan-blue); color: var(--kaplan-white); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 16px; padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 12px rgba(0,93,232,0.20); min-height: 44px; }
         .btn-teal:hover { background: #0047B3; }
-        .btn-teal:focus-visible {
-            outline: var(--focus-ring);
-            outline-offset: var(--focus-offset);
-        }
+        .btn-teal:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
         .btn-teal:active { transform: scale(0.97); }
-
         .hidden { display: none; }
-
-
-
-        /* ══════════════════════════════════════════════════
-           Responsive
-           ══════════════════════════════════════════════════ */
-        @media (min-width: 768px) {
-            .page-header h1 { font-size: 19px; }
-        }
-
-        /* ══════════════════════════════════════════════════
-           Collapsible Hint
-           ══════════════════════════════════════════════════ */
+        @media (min-width: 768px) { .page-header h1 { font-size: 19px; } }
         .collapsible-hint { padding: 0; }
-        .hint-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 20px;
-            text-align: left;
-            gap: 12px;
-            border-radius: 16px;
-        }
-        .hint-toggle h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--kaplan-purple);
-            margin: 0;
-            flex: 1;
-        }
+        .hint-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding: 20px; text-align: left; gap: 12px; border-radius: 16px; }
+        .hint-toggle h3 { font-size: 16px; font-weight: 700; color: var(--kaplan-purple); margin: 0; flex: 1; }
         .hint-toggle.teal h3  { color: var(--text-on-blue-bg); }
         .hint-toggle.green h3 { color: var(--text-on-green-bg); }
         .hint-toggle.gold h3  { color: var(--text-on-yellow-bg); }
         .hint-toggle:focus { outline: none; }
-        .hint-toggle:focus-visible {
-            outline: var(--focus-ring);
-            outline-offset: var(--focus-offset);
-            border-radius: 16px;
-        }
-        /* Icon circle inside toggle */
-        .hint-icon-wrap {
-            flex-shrink: 0;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--kaplan-purple);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
+        .hint-toggle:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-radius: 16px; }
+        .hint-icon-wrap { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--kaplan-purple); display: flex; align-items: center; justify-content: center; color: white; }
         .hint-toggle.teal  .hint-icon-wrap { background: var(--kaplan-blue); }
         .hint-toggle.green .hint-icon-wrap { background: var(--kaplan-green); }
         .hint-toggle.gold  .hint-icon-wrap { background: var(--kaplan-yellow); }
-        .hint-chevron {
-            flex-shrink: 0;
-            color: var(--kaplan-purple);
-            transition: transform 0.25s ease;
-        }
+        .hint-chevron { flex-shrink: 0; color: var(--kaplan-purple); transition: transform 0.25s ease; }
         .hint-toggle.teal  .hint-chevron { color: var(--text-on-blue-bg); }
         .hint-toggle.green .hint-chevron { color: var(--text-on-green-bg); }
         .hint-toggle.gold  .hint-chevron { color: var(--text-on-yellow-bg); }
-        .hint-toggle[aria-expanded="true"] .hint-chevron {
-            transform: rotate(180deg);
-        }
-        .hint-body {
-            padding: 0 20px 20px;
-        }
-        .hint-body p {
-            font-size: 16px;
-            color: var(--text-on-purple-bg);
-            line-height: 1.6;
-            margin: 0;
-        }
+        .hint-toggle[aria-expanded="true"] .hint-chevron { transform: rotate(180deg); }
+        .hint-body { padding: 0 20px 20px; }
+        .hint-body p { font-size: 16px; color: var(--text-on-purple-bg); line-height: 1.6; margin: 0; }
         .step-info.teal .hint-body p  { color: var(--text-on-blue-bg); }
         .step-info.green .hint-body p { color: var(--text-on-green-bg); }
         .step-info.gold .hint-body p  { color: var(--text-on-yellow-bg); }
-
-        /* ══════════════════════════════════════════════════
-           Keep / Select New Panel
-           ══════════════════════════════════════════════════ */
-        .keep-or-new-panel {
-            background: #F0EDFA;
-            border: 1px solid #DDD6F3;
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-        }
-        .keep-or-new-question {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--kaplan-purple);
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-        .keep-or-new-btns {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .btn-keep {
-            background: var(--kaplan-purple);
-            color: var(--kaplan-white);
-            font-family: 'Merriweather', 'Georgia', serif;
-            font-weight: 700;
-            font-size: 15px;
-            padding: 12px 36px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            letter-spacing: 0.05em;
-            transition: background 0.2s;
-            min-height: 44px;
-        }
+        .keep-or-new-panel { background: #F0EDFA; border: 1px solid #DDD6F3; border-radius: 16px; padding: 24px; text-align: center; }
+        .keep-or-new-question { font-size: 16px; font-weight: 600; color: var(--kaplan-purple); margin-bottom: 20px; line-height: 1.5; }
+        .keep-or-new-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-keep { background: var(--kaplan-purple); color: var(--kaplan-white); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 15px; padding: 12px 36px; border-radius: 8px; border: none; cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s; min-height: 44px; }
         .btn-keep:hover { background: var(--kaplan-purple-shade1); }
         .btn-keep:disabled { opacity: 0.5; cursor: default; }
-        .btn-select-new {
-            background: transparent;
-            color: var(--kaplan-purple);
-            font-family: 'Merriweather', 'Georgia', serif;
-            font-weight: 700;
-            font-size: 15px;
-            padding: 12px 36px;
-            border-radius: 8px;
-            border: 2px solid var(--kaplan-purple);
-            cursor: pointer;
-            letter-spacing: 0.05em;
-            transition: background 0.2s, color 0.2s;
-            min-height: 44px;
-        }
+        .btn-select-new { background: transparent; color: var(--kaplan-purple); font-family: 'Merriweather', 'Georgia', serif; font-weight: 700; font-size: 15px; padding: 12px 36px; border-radius: 8px; border: 2px solid var(--kaplan-purple); cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s, color 0.2s; min-height: 44px; }
         .btn-select-new:hover { background: var(--kaplan-purple); color: var(--kaplan-white); }
         .btn-select-new:disabled { opacity: 0.5; cursor: default; }
+        .completion-screen { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 20px; box-shadow: 0 8px 30px rgba(36,15,110,0.08); overflow: hidden; animation: fadeIn 0.5s ease-out; }
+        .completion-hero { background: var(--kaplan-purple); padding: 48px 32px 40px; text-align: center; position: relative; overflow: hidden; }
+        .completion-hero::before { content: ''; position: absolute; width: 140%; height: 300px; border-radius: 50%; border-top: 3px solid rgba(255,255,255,0.12); left: -20%; bottom: -180px; pointer-events: none; }
+        .completion-icon { width: 72px; height: 72px; background: var(--kaplan-chartreuse); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 0 0 12px rgba(192,223,22,0.2); }
+        .completion-icon svg { width: 36px; height: 36px; color: var(--kaplan-purple); }
+        .completion-hero h2 { font-size: 26px; font-weight: 900; color: var(--kaplan-white); line-height: 1.3; margin-bottom: 8px; }
+        .completion-hero p { font-size: 16px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+        .completion-body { padding: 36px 32px 40px; }
+        .completion-body > * + * { margin-top: 24px; }
+        .completion-message { font-size: 17px; line-height: 1.75; color: var(--kaplan-charcoal); }
+        .completion-steps-reminder { background: #F0EDFA; border: 1px solid #DDD6F3; border-radius: 16px; padding: 24px; }
+        .completion-steps-reminder h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--kaplan-purple); margin-bottom: 16px; }
+        .method-steps-list { list-style: none; padding: 0; margin: 0; }
+        .method-steps-list li { display: flex; align-items: flex-start; gap: 14px; font-size: 16px; color: var(--text-on-purple-bg); line-height: 1.5; }
+        .method-steps-list li + li { margin-top: 12px; }
+        .method-step-num { flex-shrink: 0; width: 26px; height: 26px; background: var(--kaplan-purple); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-top: 1px; }
+
+        /* Student-answer panel (Step 1 & 2 side-by-side compare) */
+        .student-answer-panel { padding: 18px 20px; border-radius: 14px; background: var(--kaplan-white); border: 1.5px dashed #C7CDD6; }
+        .student-answer-panel h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; color: var(--kaplan-slate); margin-bottom: 6px; }
+        .student-answer-panel p { font-size: 16px; line-height: 1.6; color: var(--kaplan-charcoal); font-style: italic; }
+        .student-answer-panel p:empty::before { content: "(no answer entered)"; color: #9CA3AF; font-style: italic; }
+
+        /* Option-letter badges (A-F) */
+        .option-card { display: flex; align-items: center; gap: 12px; }
+        .option-letter { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: #F0EDFA; color: var(--kaplan-purple); font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; font-family: 'Merriweather', 'Georgia', serif; transition: background 0.2s, color 0.2s; }
+        .option-card.selected .option-letter { background: var(--kaplan-purple); color: var(--kaplan-white); }
+        .option-word { flex: 1; }
+
+        /* Step 4: "Read with" pill toggle */
+        .read-with-panel { padding: 24px; border-radius: 16px; background: var(--kaplan-bg); border: 1px solid var(--kaplan-border); }
+        .word-pill-group { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .word-pill-label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; color: var(--kaplan-slate); margin-right: 4px; }
+        .word-pill { padding: 10px 20px; border-radius: 999px; border: 2px solid var(--kaplan-purple); background: var(--kaplan-white); color: var(--kaplan-purple); font-family: 'Open Sans', 'Arial', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s, box-shadow 0.2s; min-height: 40px; }
+        .word-pill:hover { background: #F0EDFA; }
+        .word-pill.active { background: var(--kaplan-purple); color: var(--kaplan-white); box-shadow: 0 2px 10px rgba(36,15,110,0.28); }
+        .word-pill:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .preview-sentence { font-size: 17px; line-height: 1.7; color: var(--kaplan-charcoal); font-family: 'Open Sans', 'Arial', sans-serif; }
+        .preview-sentence .highlighted-word { color: var(--kaplan-purple); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+        /* Completion-screen stats */
+        .stats-panel { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 16px; padding: 28px; }
+        .score-headline { text-align: center; padding-bottom: 24px; border-bottom: 1px solid var(--kaplan-border); margin-bottom: 24px; }
+        .score-number { font-family: 'Merriweather', 'Georgia', serif; font-size: 56px; font-weight: 900; color: var(--kaplan-purple); line-height: 1; }
+        .score-denom { font-size: 28px; color: var(--kaplan-slate); font-weight: 400; }
+        .score-label { margin-top: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--kaplan-slate); }
+        .stats-subsection { margin-bottom: 24px; }
+        .stats-subsection:last-child { margin-bottom: 0; }
+        .stats-subsection h3 { font-family: 'Open Sans', 'Arial', sans-serif; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--kaplan-slate); margin-bottom: 12px; }
+        .clue-breakdown, .pacing-list { list-style: none; padding: 0; margin: 0; }
+        .clue-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 8px; background: var(--kaplan-bg); margin-bottom: 6px; font-size: 15px; }
+        .clue-row:last-child { margin-bottom: 0; }
+        .clue-row.mastered { background: #EAFAF1; color: var(--text-on-green-bg); }
+        .clue-row.needs-work { background: #FFF8EB; color: var(--text-on-yellow-bg); }
+        .clue-name { font-weight: 600; }
+        .clue-score { font-weight: 800; font-family: 'Merriweather', 'Georgia', serif; font-size: 14px; }
+        .clue-row.mastered .clue-score::before { content: "\2713  "; }
+        .clue-row.needs-work .clue-score::before { content: "\25cb  "; }
+        .pacing-row { display: grid; grid-template-columns: 68px 1fr 44px; align-items: center; gap: 12px; padding: 6px 0; font-size: 14px; }
+        .pacing-name { font-weight: 600; color: var(--kaplan-charcoal); }
+        .pacing-bar-wrap { height: 8px; background: var(--kaplan-bg); border-radius: 999px; overflow: hidden; }
+        .pacing-bar { height: 100%; background: var(--kaplan-purple); border-radius: 999px; transition: width 0.6s ease; }
+        .pacing-time { font-weight: 700; color: var(--kaplan-slate); text-align: right; font-variant-numeric: tabular-nums; }
+        .takeaway { padding: 20px; border-radius: 14px; background: #F0EDFA; border: 1px solid #DDD6F3; color: var(--text-on-purple-bg); font-size: 15px; line-height: 1.6; }
+        .takeaway strong { color: var(--kaplan-purple); }
     </style>
 </head>
 <body>
@@ -746,9 +233,8 @@
 
     <div class="page-wrap">
 
-        <!-- Hero Header -->
         <header class="page-header">
-            <h1>Master the Kaplan Method for Sentence Equivalence — one step at a time</h1>
+            <h1>Master the Kaplan Method for Sentence Equivalence &mdash; one step at a time</h1>
             <div class="swoosh-center" aria-hidden="true">
                 <svg width="120" height="12" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2 10 Q60 -4 118 10" stroke="#240F6E" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.25"/>
@@ -756,31 +242,85 @@
             </div>
         </header>
 
-        <!-- Progress Stepper -->
         <div class="kaplan-card progress-stepper" role="region" aria-label="Step progress">
             <div class="step-boxes" role="list">
-                <div id="step-box-1" class="step-box active" role="listitem" aria-current="step">Step 1</div>
-                <div id="step-box-2" class="step-box" role="listitem">Step 2</div>
-                <div id="step-box-3" class="step-box" role="listitem">Step 3</div>
-                <div id="step-box-4" class="step-box" role="listitem">Step 4</div>
+                <div id="step-box-1" class="step-box active" role="listitem" aria-current="step" aria-label="Step 1: Clues">Clues</div>
+                <div id="step-box-2" class="step-box" role="listitem" aria-label="Step 2: Predict">Predict</div>
+                <div id="step-box-3" class="step-box" role="listitem" aria-label="Step 3: Match">Match</div>
+                <div id="step-box-4" class="step-box" role="listitem" aria-label="Step 4: Confirm">Confirm</div>
             </div>
         </div>
 
-        <!-- Live region for screen reader announcements -->
         <div id="sr-announcements" class="sr-only" aria-live="polite" role="status"></div>
 
-        <!-- Main Workspace -->
-        <main id="main-content" class="kaplan-card workspace">
+        <main id="main-content">
 
-            <!-- Question Box -->
+            <!-- ── Completion Screen ── -->
+            <section id="completion-screen" class="completion-screen" hidden tabindex="-1" aria-label="All questions complete">
+                <div class="completion-hero">
+                    <div class="completion-icon" aria-hidden="true">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <h2>Good for you!</h2>
+                    <p>You've drilled the Sentence Equivalence method and are ready to practice on your own.</p>
+                </div>
+                <div class="completion-body">
+                    <div class="stats-panel" id="completion-stats" aria-label="Your results">
+                        <div class="score-headline">
+                            <div class="score-number"><span id="score-number">0</span><span class="score-denom" id="score-denom">/0</span></div>
+                            <div class="score-label">correct on first try</div>
+                        </div>
+                        <div class="stats-subsection">
+                            <h3>By clue type</h3>
+                            <ul class="clue-breakdown" id="clue-breakdown-list"></ul>
+                        </div>
+                        <div class="stats-subsection" id="pacing-subsection">
+                            <h3>Time per step (avg)</h3>
+                            <ul class="pacing-list" id="pacing-list"></ul>
+                        </div>
+                        <div class="takeaway" id="takeaway-text"></div>
+                    </div>
+                    <p class="completion-message">Remember to use the steps of the method on each question you do, both when you are practicing and when you are sitting for the GRE:</p>
+                    <div class="completion-steps-reminder">
+                        <h3>The Kaplan Method for Sentence Equivalence</h3>
+                        <ol class="method-steps-list" aria-label="The four steps of the Kaplan Method">
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">1</span>
+                                <span>Read the sentence, looking for clues</span>
+                            </li>
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">2</span>
+                                <span>Predict an answer</span>
+                            </li>
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">3</span>
+                                <span>Select the two choices that most closely match your prediction</span>
+                            </li>
+                            <li>
+                                <span class="method-step-num" aria-hidden="true">4</span>
+                                <span>Confirm your answer by reading both selections into the sentence and checking that they produce sentences alike in meaning</span>
+                            </li>
+                        </ol>
+                    </div>
+                    <div style="text-align:center; padding-top: 8px;">
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfwkFIQUG5XfRkGizcrIZizB1Ao7AjsVwMgFXYbwpvJRqeE1w/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; background:transparent; color:var(--kaplan-purple); font-family:'Merriweather','Georgia',serif; font-weight:700; font-size:15px; padding:12px 28px; border-radius:8px; border:2px solid var(--kaplan-purple); text-decoration:none; transition:background 0.2s, color 0.2s; min-height:44px;" onmouseover="this.style.background='var(--kaplan-purple)';this.style.color='#fff';" onmouseout="this.style.background='transparent';this.style.color='var(--kaplan-purple)';">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 8h10M7 12h6m-6 4h10M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+                            Give Feedback
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Main Workspace ── -->
+            <div id="workspace-area" class="kaplan-card workspace">
+
             <section class="question-header" aria-label="Question sentence">
+                <p id="question-label" class="label"></p>
                 <p id="sentence-display" class="sentence" tabindex="0">Loading question...</p>
             </section>
 
-            <!-- Steps -->
             <div class="steps-area">
 
-                <!-- Step 1: Read & Clues -->
                 <section id="step1" class="step-container active" role="region" aria-label="Step 1: Read the sentence, looking for clues" tabindex="-1">
                     <div class="stack">
                         <div class="step-info purple collapsible-hint">
@@ -801,6 +341,10 @@
                             <label for="clue-input" class="field-label">Your analysis of clues/pivots:</label>
                             <textarea id="clue-input" placeholder="Note down pivot words or clues here..." aria-describedby="step1-feedback-text"></textarea>
                         </div>
+                        <div id="step1-your-answer" class="student-answer-panel" hidden>
+                            <h4>Your Analysis</h4>
+                            <p id="step1-your-answer-text"></p>
+                        </div>
                         <div id="step1-feedback" class="feedback-box feedback-purple" aria-live="polite">
                             <h4>Expert Clue Analysis</h4>
                             <p id="step1-feedback-text"></p>
@@ -808,7 +352,6 @@
                     </div>
                 </section>
 
-                <!-- Step 2: Predict -->
                 <section id="step2" class="step-container" role="region" aria-label="Step 2: Predict an answer" tabindex="-1">
                     <div class="stack">
                         <div class="step-info teal collapsible-hint">
@@ -829,6 +372,10 @@
                             <label for="prediction-input" class="field-label">My prediction:</label>
                             <input type="text" id="prediction-input" placeholder="Enter your predicted word..." aria-describedby="step2-feedback-text">
                         </div>
+                        <div id="step2-your-answer" class="student-answer-panel" hidden>
+                            <h4>Your Prediction</h4>
+                            <p id="step2-your-answer-text"></p>
+                        </div>
                         <div id="step2-feedback" class="feedback-box feedback-teal" aria-live="polite">
                             <h4>Expert Prediction</h4>
                             <p id="step2-feedback-text"></p>
@@ -836,7 +383,6 @@
                     </div>
                 </section>
 
-                <!-- Step 3: Select Match -->
                 <section id="step3" class="step-container" role="region" aria-label="Step 3: Select two matching choices" tabindex="-1">
                     <div class="stack">
                         <div class="step-info green collapsible-hint">
@@ -855,11 +401,9 @@
                         </div>
                         <fieldset id="options-grid" class="options-grid" aria-describedby="selection-status">
                             <legend id="options-instruction">Select exactly 2 options from the following choices.</legend>
-                            <!-- Options generated by JS -->
                         </fieldset>
                         <p id="selection-status" class="sr-only" aria-live="polite"></p>
                         <div id="selection-warning" class="selection-warning" role="alert">You must select exactly two choices.</div>
-
                         <div id="step3-feedback" class="feedback-box feedback-green" aria-live="polite">
                             <div class="feedback-header">
                                 <span id="accuracy-badge" class="accuracy-badge"></span>
@@ -870,7 +414,6 @@
                     </div>
                 </section>
 
-                <!-- Step 4: Confirm -->
                 <section id="step4" class="step-container" role="region" aria-label="Step 4: Confirm your answer" tabindex="-1">
                     <div class="stack-lg">
                         <div class="step-info gold collapsible-hint">
@@ -888,24 +431,22 @@
                             </div>
                         </div>
 
-                        <div class="stack">
-                            <div class="version-box">
-                                <h4>Version A</h4>
-                                <p id="version-a"></p>
+                        <div class="read-with-panel">
+                            <div class="word-pill-group" role="group" aria-label="Choose which word to read into the sentence">
+                                <span class="word-pill-label">Read with:</span>
+                                <button type="button" class="word-pill active" id="word-pill-a" aria-pressed="true" onclick="selectPill(0)"></button>
+                                <button type="button" class="word-pill" id="word-pill-b" aria-pressed="false" onclick="selectPill(1)"></button>
                             </div>
-                            <div class="version-box">
-                                <h4>Version B</h4>
-                                <p id="version-b"></p>
-                            </div>
+                            <p id="sentence-preview" class="preview-sentence" aria-live="polite"></p>
                         </div>
 
-                        <!-- Keep / Select New interactive -->
                         <div id="keep-or-new" class="keep-or-new-panel">
-                            <p class="keep-or-new-question">What do you think? Keep the choices you selected, or select new choices?</p>
+                            <p class="keep-or-new-question">Ready to commit, or want to reconsider?</p>
                             <div class="keep-or-new-btns">
-                                <button id="btn-keep" class="btn-keep" onclick="handleKeep()">Keep</button>
-                                <button id="btn-select-new" class="btn-select-new" onclick="handleSelectNew()">Select New</button>
+                                <button id="btn-keep" class="btn-keep" onclick="handleKeep()">Check My Answer</button>
+                                <button id="btn-select-new" class="btn-select-new" onclick="handleSelectNew()">Try Different Choices</button>
                             </div>
+                            <div id="keep-result" role="alert" style="display:none; margin-top:20px; padding:16px; border-radius:12px; font-size:16px; font-weight:600; line-height:1.5; text-align:left;"></div>
                         </div>
 
                         <div id="expert-review-panel" class="expert-review" hidden>
@@ -926,14 +467,15 @@
 
             </div>
 
-            <!-- Footer Controls -->
             <div class="controls" role="navigation" aria-label="Step navigation">
                 <button id="prev-btn" class="btn-back" disabled aria-label="Go to previous step">Back</button>
                 <button id="next-btn" class="btn-primary">Check Step 1</button>
                 <button id="restart-btn" class="btn-teal hidden">Next Question</button>
             </div>
-        </main>
 
+            </div><!-- /#workspace-area -->
+
+        </main>
 
     </div>
 
@@ -945,7 +487,8 @@
                 correct: ["opaque", "obscure"],
                 clues: "The word \u2018Though\u2019 is your contrast pivot. It contrasts the CEO\u2019s \u2018claim\u2019 of transparency with her actual behavior. The clue \u2018reveal as little as possible\u2019 defines the blank as the direct opposite of transparency\u2014something intentionally hidden.",
                 prediction: "Something like \u2018unclear\u2019, \u2018hidden\u2019, or \u2018blocking light/information\u2019.",
-                explanation: "The pivot \u2018Though\u2019 signals a contrast. Since she claimed transparency but was \u2018designed to reveal as little as possible,\u2019 the blank must mean \u2018not transparent.\u2019 While \u2018ambiguous\u2019 and \u2018equivocal\u2019 mean open to multiple interpretations (signaling lack of direction), \u2018opaque\u2019 and \u2018obscure\u2019 better describe a concerted effort to withhold information by making it difficult to perceive or see through."
+                explanation: "The pivot \u2018Though\u2019 signals a contrast. Since she claimed transparency but was \u2018designed to reveal as little as possible,\u2019 the blank must mean \u2018not transparent.\u2019 While \u2018ambiguous\u2019 and \u2018equivocal\u2019 mean open to multiple interpretations (signaling lack of direction), \u2018opaque\u2019 and \u2018obscure\u2019 better describe a concerted effort to withhold information by making it difficult to perceive or see through.",
+                clueType: "contrast-pivot"
             },
             {
                 sentence: "The professor\u2019s lecture was so _________ that even the most attentive students found it difficult to follow the convoluted logic.",
@@ -953,15 +496,35 @@
                 correct: ["abstruse", "recondite"],
                 clues: "The \u2018so\u2026 that\u2019 structure indicates cause-and-effect. The effect is \u2018difficult to follow\u2019 and \u2018convoluted logic\u2019, so the cause must be a word meaning complex or obscure.",
                 prediction: "Words like \u2018complex\u2019, \u2018obscure\u2019, or \u2018hard to understand\u2019.",
-                explanation: "\u2018Abstruse\u2019 and \u2018recondite\u2019 both mean difficult to understand or obscure. This perfectly matches the logic of a lecture that was \u2018convoluted\u2019 and \u2018difficult to follow.\u2019"
+                explanation: "\u2018Abstruse\u2019 and \u2018recondite\u2019 both mean difficult to understand or obscure. This perfectly matches the logic of a lecture that was \u2018convoluted\u2019 and \u2018difficult to follow.\u2019",
+                clueType: "cause-effect"
             },
             {
                 sentence: "The transition from a command economy to a market economy was anything but _________; instead, it was characterized by periods of intense volatility and social unrest.",
-                options: ["volatile", "quiescent", "pacific", "tumultuous", "seamless", "placid"],
+                options: ["volatile", "quiescent", "stagnant", "tumultuous", "predictable", "placid"],
                 correct: ["quiescent", "placid"],
                 clues: "The phrase \u2018anything but\u2019 acts as a negation. The blank must be the opposite of the description that follows: \u2018volatility and social unrest.\u2019",
                 prediction: "A word meaning \u2018calm\u2019, \u2018peaceful\u2019, or \u2018stable.\u2019",
-                explanation: "Because the transition was volatile and unrestful, it was \u2018anything but\u2019 calm. \u2018Quiescent\u2019 and \u2018placid\u2019 both describe a state of quiet or calm, which fits the logic of the negation."
+                explanation: "Because the transition was volatile and unrestful, it was \u2018anything but\u2019 calm. \u2018Quiescent\u2019 and \u2018placid\u2019 both describe a state of quiet or calm, which fits the logic of the negation.",
+                clueType: "negation"
+            },
+            {
+                sentence: "The CEO\u2019s speech was marked by a(n) __________ that many employees found unsettling; while she spoke of \u201ccollaboration\u201d and \u201csynergy,\u201d her rigid posture and sharp directives suggested a far more autocratic leadership style.",
+                options: ["dissonance", "congruity", "discrepancy", "ambivalence", "prevarication", "equivocation"],
+                correct: ["dissonance", "discrepancy"],
+                clues: "The semicolon signals an elaboration or explanation of the blank. The contrast between what the CEO \u2018spoke of\u2019 (collaboration, synergy) and what her body language and directives \u2018suggested\u2019 (autocratic style) defines the blank as a mismatch or contradiction between two things.",
+                prediction: "A word meaning \u2018mismatch\u2019, \u2018contradiction\u2019, or \u2018inconsistency\u2019 between words and actions.",
+                explanation: "The sentence sets up a gap between the CEO\u2019s cooperative language and her authoritarian behavior. \u2018Dissonance\u2019 refers to a lack of harmony or agreement between elements, and \u2018discrepancy\u2019 means a difference or inconsistency between two things\u2014both perfectly capture this gap. \u2018Ambivalence\u2019 describes internal mixed feelings rather than an external contradiction, while \u2018prevarication\u2019 and \u2018equivocation\u2019 refer to deliberately evasive speech, not a mismatch between words and actions.",
+                clueType: "definition"
+            },
+            {
+                sentence: "Despite the scholar\u2019s reputation for __________, his latest monograph was surprisingly accessible, eschewing the dense, impenetrable prose that had characterized his earlier contributions to the field of linguistics.",
+                options: ["limpidity", "arcaneness", "perspicacity", "reconditeness", "eloquence", "lucidity"],
+                correct: ["arcaneness", "reconditeness"],
+                clues: "The pivot word \u2018Despite\u2019 signals a contrast between the scholar\u2019s established reputation and how his latest work turned out. Since the new monograph is \u2018surprisingly accessible\u2019 and avoids \u2018dense, impenetrable prose,\u2019 his reputation must be for the opposite\u2014something difficult or obscure.",
+                prediction: "A word meaning \u2018obscurity\u2019, \u2018difficulty\u2019, or \u2018impenetrability\u2019 in scholarly writing.",
+                explanation: "\u2018Despite\u2019 tells us the new book defies expectations set by his reputation. Since the new work is accessible and avoids dense prose, his reputation must be for inaccessibility. \u2018Arcaneness\u2019 means the quality of being mysterious and understood by few, while \u2018reconditeness\u2019 means the quality of being little known or abstruse\u2014both capture a reputation for difficult, obscure scholarship. \u2018Limpidity\u2019 and \u2018lucidity\u2019 mean clarity, the opposite of what is needed, and \u2018perspicacity\u2019 refers to keen insight rather than stylistic obscurity.",
+                clueType: "contrast-pivot"
             }
         ];
 
@@ -970,15 +533,60 @@
         var isFeedbackState = false;
         var selectedOptions = [];
 
+        // Session tracking for completion-screen stats + localStorage resume
+        var sessionData = { questionResults: [] };
+        var currentQuestionFirstAttempt = true;
+        var currentStepStart = null;
+        var currentQuestionStepTimes = [0, 0, 0, 0];
+        var STORAGE_KEY = 'gre-se-scaffolder-session-v1';
+
+        var clueTypeLabels = {
+            'contrast-pivot': 'Contrast pivots',
+            'cause-effect': 'Cause & effect',
+            'negation': 'Negation',
+            'definition': 'Definition / elaboration'
+        };
+
+        function saveSession() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    currentQuestionIndex: currentQuestionIndex,
+                    questionResults: sessionData.questionResults
+                }));
+            } catch (e) { /* storage unavailable — fail silently */ }
+        }
+        function loadSession() {
+            try {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                var data = JSON.parse(raw);
+                if (typeof data.currentQuestionIndex !== 'number') return false;
+                if (data.currentQuestionIndex < 0 || data.currentQuestionIndex >= questions.length) return false;
+                currentQuestionIndex = data.currentQuestionIndex;
+                if (Array.isArray(data.questionResults)) sessionData.questionResults = data.questionResults;
+                return true;
+            } catch (e) { return false; }
+        }
+        function clearSession() {
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        }
+
+        function accumulateStepTime() {
+            if (currentStepStart !== null && currentStep >= 1 && currentStep <= 4) {
+                var elapsed = Date.now() - currentStepStart;
+                currentQuestionStepTimes[currentStep - 1] += elapsed;
+            }
+            currentStepStart = Date.now();
+        }
+
         var sentenceDisplay = document.getElementById('sentence-display');
+        var questionLabel = document.getElementById('question-label');
         var clueInput = document.getElementById('clue-input');
         var predictionInput = document.getElementById('prediction-input');
         var optionsGrid = document.getElementById('options-grid');
         var nextBtn = document.getElementById('next-btn');
         var prevBtn = document.getElementById('prev-btn');
         var restartBtn = document.getElementById('restart-btn');
-
-
         var srAnnouncements = document.getElementById('sr-announcements');
         var selectionStatus = document.getElementById('selection-status');
 
@@ -994,21 +602,26 @@
             setTimeout(function() { srAnnouncements.textContent = message; }, 100);
         }
 
-
         function loadQuestion() {
             var q = questions[currentQuestionIndex];
+            questionLabel.textContent = 'Question ' + (currentQuestionIndex + 1) + ' of ' + questions.length + ' \u2014 Sentence Equivalence';
             sentenceDisplay.textContent = q.sentence;
             clueInput.value = '';
             predictionInput.value = '';
             selectedOptions = [];
             isFeedbackState = false;
+            currentQuestionFirstAttempt = true;
+            currentQuestionStepTimes = [0, 0, 0, 0];
 
             optionsGrid.innerHTML = '';
-            q.options.sort().forEach(function(option) {
+            q.options.sort().forEach(function(option, idx) {
+                var letter = String.fromCharCode(65 + idx);
                 var btn = document.createElement('button');
                 btn.className = 'option-card';
-                btn.textContent = option;
+                btn.innerHTML = '<span class="option-letter" aria-hidden="true">' + letter + '</span><span class="option-word"></span>';
+                btn.querySelector('.option-word').textContent = option;
                 btn.setAttribute('aria-pressed', 'false');
+                btn.setAttribute('aria-label', 'Option ' + letter + ': ' + option);
                 btn.setAttribute('type', 'button');
                 btn.onclick = function() {
                     if (!isFeedbackState) toggleOption(btn, option);
@@ -1016,9 +629,28 @@
                 optionsGrid.appendChild(btn);
             });
 
+            // Hide all feedback and student-answer panels on question load
             document.querySelectorAll('.feedback-box').forEach(function(f) { f.classList.remove('active'); });
             document.getElementById('selection-warning').classList.remove('visible');
+            document.getElementById('step1-your-answer').setAttribute('hidden', '');
+            document.getElementById('step2-your-answer').setAttribute('hidden', '');
+            document.getElementById('step1-your-answer-text').textContent = '';
+            document.getElementById('step2-your-answer-text').textContent = '';
+
+            // Tutorial-style: pre-expand hints on Q1, collapse from Q2 on
+            var expandHints = currentQuestionIndex === 0;
+            document.querySelectorAll('.hint-toggle').forEach(function(btn) {
+                btn.setAttribute('aria-expanded', expandHints ? 'true' : 'false');
+                var bodyId = btn.getAttribute('aria-controls');
+                var body = document.getElementById(bodyId);
+                if (body) {
+                    if (expandHints) body.removeAttribute('hidden');
+                    else body.setAttribute('hidden', '');
+                }
+            });
+
             selectionStatus.textContent = '0 of 2 choices selected.';
+            saveSession();
             goToStep(1);
             announce('Question ' + (currentQuestionIndex + 1) + ' of ' + questions.length + ' loaded. ' + q.sentence);
         }
@@ -1048,20 +680,19 @@
         }
 
         function goToStep(step) {
+            accumulateStepTime();
             document.querySelectorAll('.step-container').forEach(function(c) { c.classList.remove('active'); });
             var stepEl = document.getElementById('step' + step);
             stepEl.classList.add('active');
             currentStep = step;
             isFeedbackState = false;
+            currentStepStart = Date.now();
             updateUI();
-
-
             announce('Step ' + step + ' of 4: ' + stepInstructions[step - 1]);
             document.getElementById('step' + step).focus();
         }
 
         function updateUI() {
-            // Update step boxes
             for (var s = 1; s <= 4; s++) {
                 var box = document.getElementById('step-box-' + s);
                 if (s === currentStep) {
@@ -1087,8 +718,9 @@
                 updateReviewStep();
                 nextBtn.classList.add('hidden');
                 nextBtn.setAttribute('aria-hidden', 'true');
-                restartBtn.classList.remove('hidden');
-                restartBtn.removeAttribute('aria-hidden');
+                restartBtn.textContent = (currentQuestionIndex < questions.length - 1) ? 'Next Question' : 'Finish';
+                restartBtn.classList.add('hidden');
+                restartBtn.setAttribute('aria-hidden', 'true');
             } else {
                 nextBtn.classList.remove('hidden');
                 nextBtn.removeAttribute('aria-hidden');
@@ -1106,6 +738,8 @@
                         announce('Please enter your clue analysis before continuing.');
                         return clueInput.focus();
                     }
+                    document.getElementById('step1-your-answer-text').textContent = clueInput.value.trim();
+                    document.getElementById('step1-your-answer').removeAttribute('hidden');
                     document.getElementById('step1-feedback-text').textContent = q.clues;
                     document.getElementById('step1-feedback').classList.add('active');
                     announce('Expert clue analysis: ' + q.clues);
@@ -1114,6 +748,8 @@
                         announce('Please enter your prediction before continuing.');
                         return predictionInput.focus();
                     }
+                    document.getElementById('step2-your-answer-text').textContent = predictionInput.value.trim();
+                    document.getElementById('step2-your-answer').removeAttribute('hidden');
                     document.getElementById('step2-feedback-text').textContent = q.prediction;
                     document.getElementById('step2-feedback').classList.add('active');
                     announce('Expert prediction: ' + q.prediction);
@@ -1123,15 +759,17 @@
                         announce('You must select exactly two choices.');
                         return;
                     }
-                    var isCorrect = selectedOptions.every(function(o) { return q.correct.includes(o); });
+                    var correctCount = selectedOptions.filter(function(o) { return q.correct.includes(o); }).length;
+                    var isCorrect = correctCount === 2;
+                    var isPartial = correctCount === 1;
                     var badge = document.getElementById('accuracy-badge');
-                    badge.textContent = isCorrect ? 'Exact Match' : 'Partial Match';
-                    badge.style.color = isCorrect ? '#145C30' : '#6B4F00';
-
-
+                    badge.textContent = isCorrect ? 'Exact Match' : (isPartial ? 'Partial Match' : 'No Match');
+                    badge.style.color = isCorrect ? '#145C30' : (isPartial ? '#6B4F00' : '#B91C1C');
                     var feedbackMsg = isCorrect
                         ? 'Your selections perfectly match the synonym pair required by the sentence logic.'
-                        : 'Let\u2019s see if these two words create identical meanings in the sentence during Step 4.';
+                        : (isPartial
+                            ? 'Let\u2019s see if these two words create identical meanings in the sentence during Step 4.'
+                            : 'Neither selection matches the correct pair. Read both versions in Step 4 and consider whether they produce the same meaning.');
                     document.getElementById('step3-feedback-text').textContent = feedbackMsg;
                     document.getElementById('step3-feedback').classList.add('active');
                     announce((isCorrect ? 'Exact Match. ' : 'Partial Match. ') + feedbackMsg);
@@ -1148,38 +786,119 @@
             var word1 = selectedOptions[0] || '_______';
             var word2 = selectedOptions[1] || '_______';
 
-            document.getElementById('version-a').innerHTML = q.sentence.replace('_________', '<strong style="color:#240F6E; text-decoration:underline; text-underline-offset:4px;">' + word1 + '</strong>');
-            document.getElementById('version-b').innerHTML = q.sentence.replace('_________', '<strong style="color:#240F6E; text-decoration:underline; text-underline-offset:4px;">' + word2 + '</strong>');
+            var pillA = document.getElementById('word-pill-a');
+            var pillB = document.getElementById('word-pill-b');
+            pillA.textContent = word1;
+            pillB.textContent = word2;
+            pillA.setAttribute('aria-label', 'Read sentence with "' + word1 + '"');
+            pillB.setAttribute('aria-label', 'Read sentence with "' + word2 + '"');
+            pillA.classList.add('active');
+            pillA.setAttribute('aria-pressed', 'true');
+            pillB.classList.remove('active');
+            pillB.setAttribute('aria-pressed', 'false');
+            renderPreviewSentence(word1);
 
             document.getElementById('correct-answer-text').textContent = q.correct.join(' & ');
             document.getElementById('explanation-text').textContent = q.explanation;
 
-            // Reset keep-or-new panel and hide expert review
             document.getElementById('keep-or-new').removeAttribute('hidden');
             document.getElementById('keep-or-new').style.opacity = '1';
             document.getElementById('btn-keep').disabled = false;
             document.getElementById('btn-select-new').disabled = false;
             document.getElementById('expert-review-panel').setAttribute('hidden', '');
+
+            var resultDiv = document.getElementById('keep-result');
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+        }
+
+        function renderPreviewSentence(word) {
+            var q = questions[currentQuestionIndex];
+            var previewEl = document.getElementById('sentence-preview');
+            // Build safely: split on the blank, insert highlighted span
+            var parts = q.sentence.split('_________');
+            previewEl.innerHTML = '';
+            previewEl.appendChild(document.createTextNode(parts[0] || ''));
+            var span = document.createElement('span');
+            span.className = 'highlighted-word';
+            span.textContent = word;
+            previewEl.appendChild(span);
+            previewEl.appendChild(document.createTextNode(parts[1] || ''));
+        }
+
+        function selectPill(index) {
+            var word = selectedOptions[index];
+            if (!word) return;
+            var pillA = document.getElementById('word-pill-a');
+            var pillB = document.getElementById('word-pill-b');
+            if (index === 0) {
+                pillA.classList.add('active');
+                pillA.setAttribute('aria-pressed', 'true');
+                pillB.classList.remove('active');
+                pillB.setAttribute('aria-pressed', 'false');
+            } else {
+                pillB.classList.add('active');
+                pillB.setAttribute('aria-pressed', 'true');
+                pillA.classList.remove('active');
+                pillA.setAttribute('aria-pressed', 'false');
+            }
+            renderPreviewSentence(word);
+            announce('Reading with ' + word);
         }
 
         function handleKeep() {
+            accumulateStepTime();
             var q = questions[currentQuestionIndex];
             var isCorrect = selectedOptions.length === 2 && selectedOptions.every(function(o) { return q.correct.includes(o); });
-            // Disable buttons
+
+            // Record result for this question (overwrite if they checked before)
+            sessionData.questionResults[currentQuestionIndex] = {
+                correct: isCorrect,
+                correctFirstTry: isCorrect && currentQuestionFirstAttempt,
+                clueType: q.clueType,
+                stepTimes: currentQuestionStepTimes.slice()
+            };
+            saveSession();
+
             document.getElementById('btn-keep').disabled = true;
             document.getElementById('btn-select-new').disabled = true;
-            // Reveal expert review
+
+            var resultDiv = document.getElementById('keep-result');
+            var selectedText = selectedOptions.length === 2
+                ? '\u201c' + selectedOptions[0] + '\u201d and \u201c' + selectedOptions[1] + '\u201d'
+                : '(no selection)';
+
+            if (isCorrect) {
+                resultDiv.style.background = '#EAFAF1';
+                resultDiv.style.border = '2px solid #B6ECC9';
+                resultDiv.style.color = '#145C30';
+                resultDiv.innerHTML = '\u2714\ufe0f Correct! You selected ' + selectedText + ' \u2014 the right pair.';
+            } else {
+                resultDiv.style.background = '#FDECEB';
+                resultDiv.style.border = '2px solid #F5C6C0';
+                resultDiv.style.color = '#B91C1C';
+                var correctText = '\u201c' + q.correct[0] + '\u201d and \u201c' + q.correct[1] + '\u201d';
+                resultDiv.innerHTML = '\u274c Incorrect. You selected ' + selectedText + '. The correct pair is ' + correctText + '. See the Expert Review below.';
+            }
+            resultDiv.style.display = 'block';
+
             var panel = document.getElementById('expert-review-panel');
             panel.removeAttribute('hidden');
             panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            restartBtn.classList.remove('hidden');
+            restartBtn.removeAttribute('aria-hidden');
+
             if (isCorrect) {
-                announce("Correct! Traditional Kaplan logic applies here. You've completed the exercise.");
+                announce('Correct! You selected ' + selectedText + '. That\'s the right pair.');
                 launchConfetti();
+            } else {
+                announce('Incorrect. You selected ' + selectedText + '. The correct pair is ' + q.correct.join(' and ') + '. See the Expert Review for an explanation.');
             }
         }
 
         function handleSelectNew() {
-            // Send user back to step 3, reset its state
+            currentQuestionFirstAttempt = false;
             document.getElementById('step3-feedback').classList.remove('active');
             document.getElementById('selection-warning').classList.remove('visible');
             selectedOptions = [];
@@ -1192,12 +911,8 @@
         }
 
         function launchConfetti() {
-            // WCAG 2.3.1 & 2.2.2: Respect reduced motion preference
             var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (prefersReducedMotion) {
-                // No animation — just announce success
-                return;
-            }
+            if (prefersReducedMotion) return;
 
             var colors = ['#240F6E', '#005DE8', '#C0DF16', '#FFC82E', '#DE1B90', '#287D21'];
             var originX = window.innerWidth / 2;
@@ -1208,33 +923,17 @@
             var burstTimer = null;
             var animationRunning = true;
 
-            // WCAG 2.2.2: Create dismiss button (keyboard accessible)
-            var dismissBtn = document.createElement('button');
-            dismissBtn.textContent = 'Dismiss animation';
-            dismissBtn.setAttribute('aria-label', 'Dismiss confetti animation');
-            dismissBtn.style.cssText = 'position:fixed;top:16px;right:16px;z-index:10000;padding:10px 20px;background:var(--kaplan-purple,#240F6E);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px;';
-            document.body.appendChild(dismissBtn);
-            dismissBtn.focus();
-
             function cleanup() {
                 animationRunning = false;
                 if (burstTimer) clearTimeout(burstTimer);
                 confettiElements.forEach(function(el) { if (el.parentNode) el.remove(); });
                 confettiElements = [];
-                if (dismissBtn.parentNode) dismissBtn.remove();
             }
 
-            dismissBtn.onclick = cleanup;
-            dismissBtn.onkeydown = function(e) {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cleanup(); }
-            };
-
-            // WCAG 2.2.2: Auto-stop after 4.5 seconds (under 5s limit)
             setTimeout(cleanup, 4500);
 
             function burst() {
                 if (count >= total || !animationRunning) return;
-                // WCAG 2.3.1: Limit batch size to prevent >3 flashes/second
                 var batch = Math.min(6, total - count);
                 for (var i = 0; i < batch; i++) {
                     var el = document.createElement('div');
@@ -1277,7 +976,6 @@
                     })(el, vx, vy, startTime, duration);
                 }
                 count += batch;
-                // Stagger bursts at ~60ms intervals to stay under 3 flashes/sec threshold
                 if (count < total && animationRunning) burstTimer = setTimeout(burst, 60);
             }
             burst();
@@ -1287,16 +985,149 @@
         prevBtn.onclick = function() {
             if (currentStep > 1) goToStep(currentStep - 1);
         };
-
         restartBtn.onclick = function() {
-            currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
-            loadQuestion();
+            var nextIndex = currentQuestionIndex + 1;
+            if (nextIndex >= questions.length) {
+                showCompletionScreen();
+            } else {
+                currentQuestionIndex = nextIndex;
+                loadQuestion();
+            }
         };
+
+        function showCompletionScreen() {
+            accumulateStepTime();
+            document.getElementById('workspace-area').style.display = 'none';
+            document.querySelector('.kaplan-card.progress-stepper').style.display = 'none';
+            generateCompletionStats();
+            clearSession();
+            var screen = document.getElementById('completion-screen');
+            screen.removeAttribute('hidden');
+            screen.focus();
+            announce('Congratulations! You have completed all questions.');
+        }
+
+        function generateCompletionStats() {
+            var results = sessionData.questionResults.filter(function(r) { return r; });
+            var totalQuestions = results.length;
+            var correctFirstTryCount = results.filter(function(r) { return r.correctFirstTry; }).length;
+
+            document.getElementById('score-number').textContent = correctFirstTryCount;
+            document.getElementById('score-denom').textContent = '/' + totalQuestions;
+
+            // Clue-type breakdown
+            var byClueType = {};
+            var firstWrongQuestionNum = null;
+            results.forEach(function(r, i) {
+                var type = r.clueType || 'other';
+                if (!byClueType[type]) byClueType[type] = { correct: 0, total: 0, wrongQuestionNums: [] };
+                byClueType[type].total++;
+                if (r.correctFirstTry) byClueType[type].correct++;
+                else {
+                    byClueType[type].wrongQuestionNums.push(i + 1);
+                    if (firstWrongQuestionNum === null) firstWrongQuestionNum = i + 1;
+                }
+            });
+
+            var clueListEl = document.getElementById('clue-breakdown-list');
+            clueListEl.innerHTML = '';
+            Object.keys(byClueType).forEach(function(type) {
+                var data = byClueType[type];
+                var mastered = data.correct === data.total;
+                var li = document.createElement('li');
+                li.className = 'clue-row ' + (mastered ? 'mastered' : 'needs-work');
+                var nameSpan = document.createElement('span');
+                nameSpan.className = 'clue-name';
+                nameSpan.textContent = clueTypeLabels[type] || type;
+                var scoreSpan = document.createElement('span');
+                scoreSpan.className = 'clue-score';
+                scoreSpan.textContent = data.correct + ' / ' + data.total;
+                li.appendChild(nameSpan);
+                li.appendChild(scoreSpan);
+                clueListEl.appendChild(li);
+            });
+
+            // Pacing: average seconds per step
+            var totalTimes = [0, 0, 0, 0];
+            var counts = [0, 0, 0, 0];
+            results.forEach(function(r) {
+                if (!r.stepTimes) return;
+                r.stepTimes.forEach(function(t, i) {
+                    if (typeof t === 'number' && t > 0) {
+                        totalTimes[i] += t;
+                        counts[i]++;
+                    }
+                });
+            });
+            var avgSeconds = totalTimes.map(function(t, i) {
+                return counts[i] > 0 ? Math.round(t / counts[i] / 1000) : 0;
+            });
+            var maxAvg = Math.max.apply(null, avgSeconds) || 1;
+
+            var pacingListEl = document.getElementById('pacing-list');
+            pacingListEl.innerHTML = '';
+            var stepNames = ['Clues', 'Predict', 'Match', 'Confirm'];
+            var hasPacingData = avgSeconds.some(function(t) { return t > 0; });
+            if (hasPacingData) {
+                stepNames.forEach(function(name, i) {
+                    var t = avgSeconds[i];
+                    var pct = maxAvg > 0 ? Math.max(4, (t / maxAvg) * 100) : 0;
+                    var li = document.createElement('li');
+                    li.className = 'pacing-row';
+                    var nameEl = document.createElement('span');
+                    nameEl.className = 'pacing-name';
+                    nameEl.textContent = name;
+                    var barWrap = document.createElement('div');
+                    barWrap.className = 'pacing-bar-wrap';
+                    var bar = document.createElement('div');
+                    bar.className = 'pacing-bar';
+                    bar.style.width = pct + '%';
+                    barWrap.appendChild(bar);
+                    var timeEl = document.createElement('span');
+                    timeEl.className = 'pacing-time';
+                    timeEl.textContent = t + 's';
+                    li.appendChild(nameEl);
+                    li.appendChild(barWrap);
+                    li.appendChild(timeEl);
+                    pacingListEl.appendChild(li);
+                });
+            } else {
+                document.getElementById('pacing-subsection').style.display = 'none';
+            }
+
+            // Contextual takeaway
+            var takeawayEl = document.getElementById('takeaway-text');
+            var takeawayHtml = '';
+            if (totalQuestions === 0) {
+                takeawayHtml = '<strong>Well done.</strong> Keep practicing to build fluency with the method.';
+            } else if (correctFirstTryCount === totalQuestions) {
+                takeawayHtml = '<strong>Perfect run.</strong> You\u2019ve internalized the Kaplan Method \u2014 try a harder question set next.';
+            } else {
+                // Find strongest and weakest clue types by ratio
+                var weakest = null, strongest = null;
+                Object.keys(byClueType).forEach(function(type) {
+                    var d = byClueType[type];
+                    var ratio = d.correct / d.total;
+                    if (weakest === null || ratio < weakest.ratio) weakest = { type: type, ratio: ratio, data: d };
+                    if (strongest === null || ratio > strongest.ratio) strongest = { type: type, ratio: ratio, data: d };
+                });
+                var intro = correctFirstTryCount / totalQuestions >= 0.6 ? 'Strong work.' : 'Good start.';
+                takeawayHtml = '<strong>' + intro + '</strong> ';
+                if (strongest && strongest.ratio === 1 && weakest && weakest.ratio < 1 && strongest.type !== weakest.type) {
+                    takeawayHtml += 'You nailed <strong>' + (clueTypeLabels[strongest.type] || strongest.type).toLowerCase() + '</strong>. <strong>' + (clueTypeLabels[weakest.type] || weakest.type) + '</strong> is where to focus next. ';
+                } else if (weakest && weakest.ratio < 1) {
+                    takeawayHtml += '<strong>' + (clueTypeLabels[weakest.type] || weakest.type) + '</strong> is where to focus next. ';
+                }
+                if (firstWrongQuestionNum !== null) {
+                    takeawayHtml += '<strong>Come back tomorrow to review Q' + firstWrongQuestionNum + '</strong> \u2014 spaced repetition doubles retention.';
+                }
+            }
+            takeawayEl.innerHTML = takeawayHtml;
+        }
 
         document.addEventListener('keydown', function(e) {
             if (e.target.tagName === 'TEXTAREA') return;
         });
-
         function toggleHint(btn) {
             var expanded = btn.getAttribute('aria-expanded') === 'true';
             btn.setAttribute('aria-expanded', !expanded);
@@ -1305,7 +1136,10 @@
             else { body.removeAttribute('hidden'); }
         }
 
-        window.onload = loadQuestion;
+        window.onload = function() {
+            loadSession();
+            loadQuestion();
+        };
     </script>
 </body>
 </html>
