@@ -15,21 +15,42 @@ export default async (req) => {
         return json({ error: 'Invalid JSON body' }, 400);
     }
 
-    const { step, sentence, rubric, studentInput, model } = body || {};
+    const { step, sentence, rubric, studentInput, model,
+            correctPair, selections, clueAnalysis, prediction } = body || {};
 
-    if (![1, 2].includes(step)) return json({ error: 'step must be 1 or 2' }, 400);
+    if (![1, 2, 4].includes(step)) return json({ error: 'step must be 1, 2, or 4' }, 400);
     if (typeof sentence !== 'string' || !sentence.trim()) return json({ error: 'Missing sentence' }, 400);
-    if (typeof studentInput !== 'string' || !studentInput.trim()) return json({ error: 'Missing studentInput' }, 400);
-    if (!rubric || typeof rubric !== 'object') return json({ error: 'Missing rubric' }, 400);
 
-    // Cap student input length to discourage prompt stuffing
-    const trimmedInput = studentInput.trim().slice(0, 1000);
+    // Per-step validation — step 4 needs a different payload shape
+    if (step === 1 || step === 2) {
+        if (typeof studentInput !== 'string' || !studentInput.trim()) return json({ error: 'Missing studentInput' }, 400);
+        if (!rubric || typeof rubric !== 'object') return json({ error: 'Missing rubric' }, 400);
+    }
+    if (step === 4) {
+        if (!Array.isArray(correctPair) || correctPair.length !== 2) return json({ error: 'correctPair must be a 2-item array' }, 400);
+        if (!Array.isArray(selections) || selections.length !== 2) return json({ error: 'selections must be a 2-item array' }, 400);
+        if (typeof clueAnalysis !== 'string') return json({ error: 'Missing clueAnalysis' }, 400);
+        if (typeof prediction !== 'string') return json({ error: 'Missing prediction' }, 400);
+    }
+
+    // Cap student inputs to discourage prompt stuffing
+    const trimmedInput = typeof studentInput === 'string' ? studentInput.trim().slice(0, 1000) : '';
+    const trimmedClue  = typeof clueAnalysis === 'string' ? clueAnalysis.trim().slice(0, 1000) : '';
+    const trimmedPred  = typeof prediction   === 'string' ? prediction.trim().slice(0, 200)    : '';
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return json({ error: 'Server misconfigured: GEMINI_API_KEY not set' }, 500);
 
     const useModel = ALLOWED_MODELS.has(model) ? model : 'gemini-2.5-flash';
-    const { prompt, schema } = buildPromptAndSchema(step, sentence, rubric, trimmedInput);
+    const { prompt, schema } = buildPromptAndSchema(step, {
+        sentence,
+        rubric,
+        studentInput: trimmedInput,
+        correctPair,
+        selections,
+        clueAnalysis: trimmedClue,
+        prediction: trimmedPred
+    });
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(useModel)}:generateContent`;
     const controller = new AbortController();
@@ -129,7 +150,9 @@ function json(body, status = 200) {
     });
 }
 
-function buildPromptAndSchema(step, sentence, rubric, studentInput) {
+function buildPromptAndSchema(step, payload) {
+    const { sentence, rubric, studentInput, correctPair, selections, clueAnalysis, prediction } = payload;
+
     if (step === 1) {
         const prompt =
             'You are a GRE verbal coach evaluating a student\'s clue analysis for a Sentence Equivalence question.\n\n' +
@@ -154,24 +177,57 @@ function buildPromptAndSchema(step, sentence, rubric, studentInput) {
         return { prompt, schema };
     }
 
-    // step === 2
-    const targetMeanings = Array.isArray(rubric.targetMeanings) ? rubric.targetMeanings : [];
+    if (step === 2) {
+        const targetMeanings = Array.isArray(rubric.targetMeanings) ? rubric.targetMeanings : [];
+        const prompt =
+            'You are a GRE verbal coach evaluating a student\'s predicted word for a Sentence Equivalence blank.\n\n' +
+            `SENTENCE: "${sentence}"\n` +
+            `TARGET MEANINGS (any word with a similar meaning is correct): ${JSON.stringify(targetMeanings)}\n\n` +
+            `STUDENT PREDICTION: "${studentInput}"\n\n` +
+            'Evaluate leniently — the prediction just needs to be semantically close to one of the target meanings.\n\n' +
+            'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
+            '- meaningMatch (boolean): does the prediction match the required meaning?\n' +
+            '- nudge (string, 22 words max): one coaching sentence addressed to "you". If correct, affirm briefly. If off, hint at the direction without revealing the answer.';
+        const schema = {
+            type: 'object',
+            properties: {
+                meaningMatch: { type: 'boolean' },
+                nudge: { type: 'string' }
+            },
+            required: ['meaningMatch', 'nudge']
+        };
+        return { prompt, schema };
+    }
+
+    // step === 4: holistic recap of the full question journey
+    const correctSet = new Set(correctPair);
+    const numCorrect = selections.filter(s => correctSet.has(s)).length;
+    const incorrect = selections.filter(s => !correctSet.has(s));
+
     const prompt =
-        'You are a GRE verbal coach evaluating a student\'s predicted word for a Sentence Equivalence blank.\n\n' +
+        'You are a GRE verbal coach giving a student a brief, personalized recap after they just submitted their answer to a Sentence Equivalence question. The Kaplan Method has four steps: (1) find clues, (2) predict a word, (3) match to answer choices, (4) confirm by reading back.\n\n' +
         `SENTENCE: "${sentence}"\n` +
-        `TARGET MEANINGS (any word with a similar meaning is correct): ${JSON.stringify(targetMeanings)}\n\n` +
-        `STUDENT PREDICTION: "${studentInput}"\n\n` +
-        'Evaluate leniently — the prediction just needs to be semantically close to one of the target meanings.\n\n' +
-        'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
-        '- meaningMatch (boolean): does the prediction match the required meaning?\n' +
-        '- nudge (string, 22 words max): one coaching sentence addressed to "you". If correct, affirm briefly. If off, hint at the direction without revealing the answer.';
+        `CORRECT ANSWER PAIR: ${JSON.stringify(correctPair)}\n` +
+        `STUDENT'S CLUE ANALYSIS (step 1): "${clueAnalysis || '(none entered)'}"\n` +
+        `STUDENT'S PREDICTION (step 2): "${prediction || '(none entered)'}"\n` +
+        `STUDENT'S FINAL SELECTIONS (step 3/4): ${JSON.stringify(selections)}\n` +
+        `NUMBER CORRECT: ${numCorrect} of 2\n` +
+        (incorrect.length > 0 ? `INCORRECT SELECTION(S): ${JSON.stringify(incorrect)}\n` : '') +
+        '\n' +
+        'Write a 2-sentence recap (40 words max total) that:\n' +
+        '- Acknowledges what they did well across the four steps (clues, prediction, matching).\n' +
+        '- Calls out the specific gap if any — weak clue analysis, off-target prediction, or vocabulary issue with a wrong selection.\n' +
+        '- References their actual prediction word when explaining why a wrong pick was off (e.g., "X doesn\'t match your prediction of Y").\n' +
+        '- Is encouraging but honest. Address the student as "you".\n\n' +
+        'Also return wordsToReview: from their incorrect selections only, list any words worth adding to a GRE vocab study list (0-2 items, skip truly common words like "clear" or "simple"). If all selections were correct, return an empty array.\n\n' +
+        'Output ONLY a JSON object. No preamble, no markdown fences.';
     const schema = {
         type: 'object',
         properties: {
-            meaningMatch: { type: 'boolean' },
-            nudge: { type: 'string' }
+            summary: { type: 'string' },
+            wordsToReview: { type: 'array', items: { type: 'string' } }
         },
-        required: ['meaningMatch', 'nudge']
+        required: ['summary', 'wordsToReview']
     };
     return { prompt, schema };
 }
