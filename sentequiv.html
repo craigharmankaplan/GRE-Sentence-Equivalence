@@ -218,7 +218,7 @@
         .stats-subsection { margin-bottom: 24px; }
         .stats-subsection:last-child { margin-bottom: 0; }
         .stats-subsection h3 { font-family: 'Open Sans', 'Arial', sans-serif; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: var(--kaplan-slate); margin-bottom: 12px; }
-        .clue-breakdown, .pacing-list { list-style: none; padding: 0; margin: 0; }
+        .clue-breakdown { list-style: none; padding: 0; margin: 0; }
         .clue-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 8px; background: var(--kaplan-bg); margin-bottom: 6px; font-size: 15px; }
         .clue-row:last-child { margin-bottom: 0; }
         .clue-row.mastered { background: #EAFAF1; color: var(--text-on-green-bg); }
@@ -227,11 +227,6 @@
         .clue-score { font-weight: 800; font-family: 'Merriweather', 'Georgia', serif; font-size: 14px; }
         .clue-row.mastered .clue-score::before { content: "\2713  "; }
         .clue-row.needs-work .clue-score::before { content: "\25cb  "; }
-        .pacing-row { display: grid; grid-template-columns: 68px 1fr 44px; align-items: center; gap: 12px; padding: 6px 0; font-size: 14px; }
-        .pacing-name { font-weight: 600; color: var(--kaplan-charcoal); }
-        .pacing-bar-wrap { height: 8px; background: var(--kaplan-bg); border-radius: 999px; overflow: hidden; }
-        .pacing-bar { height: 100%; background: var(--kaplan-purple); border-radius: 999px; transition: width 0.6s ease; }
-        .pacing-time { font-weight: 700; color: var(--kaplan-slate); text-align: right; font-variant-numeric: tabular-nums; }
         .takeaway { padding: 20px; border-radius: 14px; background: #F0EDFA; border: 1px solid #DDD6F3; color: var(--text-on-purple-bg); font-size: 15px; line-height: 1.6; }
         .takeaway strong { color: var(--kaplan-purple); }
 
@@ -284,6 +279,16 @@
         .ai-match-pill { padding: 3px 10px; border-radius: 999px; font-weight: 700; letter-spacing: 0.02em; }
         .ai-match-pill.found { background: #EAFAF1; color: var(--text-on-green-bg); }
         .ai-match-pill.missed { background: #FDECEB; color: #B91C1C; }
+        .ai-coach-words { margin-top: 10px; font-size: 13px; color: var(--text-on-yellow-bg); line-height: 1.5; }
+        .ai-coach-words:empty { display: none; }
+        .ai-coach-words-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; margin-right: 6px; }
+        .ai-coach-word { display: inline-block; padding: 2px 10px; margin: 2px 4px 2px 0; border-radius: 999px; background: var(--kaplan-white); border: 1px solid #F5DCA0; color: var(--text-on-yellow-bg); font-weight: 700; }
+
+        /* Completion-screen vocab-to-review chips */
+        .subsection-help { font-size: 13px; color: var(--kaplan-slate); line-height: 1.45; margin: -4px 0 12px; }
+        .words-review-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .review-word-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; background: #FDECEB; border: 1px solid #F5C6C0; color: #B91C1C; font-size: 14px; font-weight: 700; }
+        .review-word-source { font-size: 11px; font-weight: 600; color: #B91C1C; opacity: 0.7; letter-spacing: 0.04em; }
 
         /* In-app feedback form */
         .feedback-panel { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 16px; padding: 28px; }
@@ -429,9 +434,10 @@
                             <h3>By clue type</h3>
                             <ul class="clue-breakdown" id="clue-breakdown-list"></ul>
                         </div>
-                        <div class="stats-subsection" id="pacing-subsection">
-                            <h3>Time per step (avg)</h3>
-                            <ul class="pacing-list" id="pacing-list"></ul>
+                        <div class="stats-subsection" id="words-to-review-subsection" hidden>
+                            <h3>Vocabulary to review</h3>
+                            <p class="subsection-help">Options you selected that weren't in the correct pair. Worth adding to your study list.</p>
+                            <div id="words-to-review-list" class="words-review-grid"></div>
                         </div>
                         <div class="takeaway" id="takeaway-text"></div>
                     </div>
@@ -482,7 +488,6 @@
                     </div>
                     <div class="feedback-thanks" id="feedback-thanks">
                         <h4>Thanks for the feedback!</h4>
-                        <p>Your input helps us refine the method.</p>
                     </div>
                 </div>
             </section>
@@ -641,6 +646,15 @@
                                 <button id="btn-select-new" class="btn-select-new" onclick="handleSelectNew()">Try Different Choices</button>
                             </div>
                             <div id="keep-result" role="alert" style="display:none; margin-top:20px; padding:16px; border-radius:12px; font-size:16px; font-weight:600; line-height:1.5; text-align:left;"></div>
+                        </div>
+
+                        <div id="step4-ai-coach" class="ai-coach-card" aria-live="polite">
+                            <div class="ai-coach-header">
+                                <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
+                                <span class="ai-coach-label">AI Coach &middot; Journey Recap</span>
+                            </div>
+                            <p id="step4-ai-coach-body" class="ai-coach-body"></p>
+                            <div id="step4-ai-coach-words" class="ai-coach-words"></div>
                         </div>
 
                         <div id="expert-review-panel" class="expert-review" hidden>
@@ -917,6 +931,42 @@
             });
         }
 
+        function gradeStep4() {
+            var q = questions[currentQuestionIndex];
+            if (!isAIReady() || selectedOptions.length !== 2) return Promise.resolve(null);
+            return callGradingProxy({
+                step: 4,
+                sentence: q.sentence,
+                correctPair: q.correct,
+                selections: selectedOptions.slice(),
+                clueAnalysis: (clueInput.value || '').trim(),
+                prediction: (predictionInput.value || '').trim(),
+                model: settings.model
+            });
+        }
+
+        function showStep4CoachResult(summary, wordsToReview) {
+            var card = document.getElementById('step4-ai-coach');
+            var body = document.getElementById('step4-ai-coach-body');
+            var wordsEl = document.getElementById('step4-ai-coach-words');
+            body.className = 'ai-coach-body';
+            body.textContent = summary;
+            wordsEl.innerHTML = '';
+            if (Array.isArray(wordsToReview) && wordsToReview.length > 0) {
+                var label = document.createElement('span');
+                label.className = 'ai-coach-words-label';
+                label.textContent = 'Worth reviewing:';
+                wordsEl.appendChild(label);
+                wordsToReview.forEach(function(w) {
+                    var chip = document.createElement('span');
+                    chip.className = 'ai-coach-word';
+                    chip.textContent = w;
+                    wordsEl.appendChild(chip);
+                });
+            }
+            card.classList.add('visible');
+        }
+
         // ──────────────────────────────────────────────────────────────
         // Telemetry: sessionId + event buffer + Supabase sync
         // ──────────────────────────────────────────────────────────────
@@ -1156,6 +1206,7 @@
             document.getElementById('selection-warning').classList.remove('visible');
             hideCoach(1);
             hideCoach(2);
+            hideCoach(4);
 
             // Tutorial-style: pre-expand hints on Q1, collapse from Q2 on
             var expandHints = currentQuestionIndex === 0;
@@ -1291,6 +1342,13 @@
                                 { label: 'Pivot word', found: !!result.pivotFound },
                                 { label: 'Key clue', found: !!result.clueFound }
                             ]);
+                            // Persist for completion-screen takeaway logic
+                            if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                            sessionData.questionResults[currentQuestionIndex].aiStep1 = {
+                                pivotFound: !!result.pivotFound,
+                                clueFound: !!result.clueFound
+                            };
+                            saveSession();
                             sendEvent('ai_grade_step1', {
                                 questionIndex: currentQuestionIndex,
                                 studentInput: clueInput.value.trim(),
@@ -1328,6 +1386,11 @@
                             showCoachResult(2, result.nudge, [
                                 { label: 'Meaning match', found: !!result.meaningMatch }
                             ]);
+                            if (!sessionData.questionResults[currentQuestionIndex]) sessionData.questionResults[currentQuestionIndex] = {};
+                            sessionData.questionResults[currentQuestionIndex].aiStep2 = {
+                                meaningMatch: !!result.meaningMatch
+                            };
+                            saveSession();
                             sendEvent('ai_grade_step2', {
                                 questionIndex: currentQuestionIndex,
                                 studentInput: predictionInput.value.trim(),
@@ -1382,6 +1445,8 @@
             var q = questions[currentQuestionIndex];
             var word1 = selectedOptions[0] || '_______';
             var word2 = selectedOptions[1] || '_______';
+
+            hideCoach(4);
 
             var pillA = document.getElementById('word-pill-a');
             var pillB = document.getElementById('word-pill-b');
@@ -1447,13 +1512,17 @@
             accumulateStepTime();
             var q = questions[currentQuestionIndex];
             var isCorrect = selectedOptions.length === 2 && selectedOptions.every(function(o) { return q.correct.includes(o); });
+            var wrongSelections = selectedOptions.filter(function(o) { return !q.correct.includes(o); });
 
             // Record result for this question (overwrite if they checked before)
             sessionData.questionResults[currentQuestionIndex] = {
                 correct: isCorrect,
                 correctFirstTry: isCorrect && currentQuestionFirstAttempt,
                 clueType: q.clueType,
-                stepTimes: currentQuestionStepTimes.slice()
+                stepTimes: currentQuestionStepTimes.slice(),
+                selections: selectedOptions.slice(),
+                wrongSelections: wrongSelections,
+                aiWordsToReview: []
             };
             saveSession();
 
@@ -1503,6 +1572,31 @@
                 launchConfetti();
             } else {
                 announce('Incorrect. You selected ' + selectedText + '. The correct pair is ' + q.correct.join(' and ') + '. See the Expert Review for an explanation.');
+            }
+
+            // Kick off Step 4 AI journey recap
+            if (isAIReady()) {
+                var qIndexAtCall = currentQuestionIndex;
+                showCoachLoading(4);
+                gradeStep4().then(function(result) {
+                    if (!result) { hideCoach(4); return; }
+                    showStep4CoachResult(result.summary, result.wordsToReview || []);
+                    var res = sessionData.questionResults[qIndexAtCall];
+                    if (res && Array.isArray(result.wordsToReview)) {
+                        res.aiWordsToReview = result.wordsToReview.slice();
+                        saveSession();
+                    }
+                    sendEvent('ai_grade_step4', {
+                        questionIndex: qIndexAtCall,
+                        summary: result.summary,
+                        wordsToReview: result.wordsToReview
+                    });
+                }).catch(function(err) {
+                    hideCoach(4);
+                    console.warn('[AI Coach] Step 4 grading failed:', err);
+                });
+            } else {
+                hideCoach(4);
             }
         }
 
@@ -1631,6 +1725,31 @@
             announce('Congratulations! You have completed all questions.');
         }
 
+        function aggregateWordsToReview(results) {
+            var byWord = {};
+            var order = [];
+            results.forEach(function(r, i) {
+                if (!r) return;
+                // Prefer the AI's curated list; fall back to all wrong selections if AI didn't run
+                var source = (Array.isArray(r.aiWordsToReview) && r.aiWordsToReview.length > 0)
+                    ? r.aiWordsToReview
+                    : (Array.isArray(r.wrongSelections) ? r.wrongSelections : []);
+                source.forEach(function(w) {
+                    if (!w) return;
+                    var key = String(w).toLowerCase();
+                    if (!byWord[key]) {
+                        byWord[key] = { word: w, questions: [] };
+                        order.push(key);
+                    }
+                    var qNum = i + 1;
+                    if (byWord[key].questions.indexOf(qNum) === -1) {
+                        byWord[key].questions.push(qNum);
+                    }
+                });
+            });
+            return order.map(function(k) { return byWord[k]; });
+        }
+
         function generateCompletionStats() {
             var results = sessionData.questionResults.filter(function(r) { return r; });
             var totalQuestions = results.length;
@@ -1671,82 +1790,87 @@
                 clueListEl.appendChild(li);
             });
 
-            // Pacing: average seconds per step
-            var totalTimes = [0, 0, 0, 0];
-            var counts = [0, 0, 0, 0];
-            results.forEach(function(r) {
-                if (!r.stepTimes) return;
-                r.stepTimes.forEach(function(t, i) {
-                    if (typeof t === 'number' && t > 0) {
-                        totalTimes[i] += t;
-                        counts[i]++;
-                    }
-                });
-            });
-            var avgSeconds = totalTimes.map(function(t, i) {
-                return counts[i] > 0 ? Math.round(t / counts[i] / 1000) : 0;
-            });
-            var maxAvg = Math.max.apply(null, avgSeconds) || 1;
-
-            var pacingListEl = document.getElementById('pacing-list');
-            pacingListEl.innerHTML = '';
-            var stepNames = ['Clues', 'Predict', 'Match', 'Confirm'];
-            var hasPacingData = avgSeconds.some(function(t) { return t > 0; });
-            if (hasPacingData) {
-                stepNames.forEach(function(name, i) {
-                    var t = avgSeconds[i];
-                    var pct = maxAvg > 0 ? Math.max(4, (t / maxAvg) * 100) : 0;
-                    var li = document.createElement('li');
-                    li.className = 'pacing-row';
-                    var nameEl = document.createElement('span');
-                    nameEl.className = 'pacing-name';
-                    nameEl.textContent = name;
-                    var barWrap = document.createElement('div');
-                    barWrap.className = 'pacing-bar-wrap';
-                    var bar = document.createElement('div');
-                    bar.className = 'pacing-bar';
-                    bar.style.width = pct + '%';
-                    barWrap.appendChild(bar);
-                    var timeEl = document.createElement('span');
-                    timeEl.className = 'pacing-time';
-                    timeEl.textContent = t + 's';
-                    li.appendChild(nameEl);
-                    li.appendChild(barWrap);
-                    li.appendChild(timeEl);
-                    pacingListEl.appendChild(li);
-                });
+            // Vocabulary to review (aggregate across all questions)
+            var wordsToReview = aggregateWordsToReview(results);
+            var wtrSub = document.getElementById('words-to-review-subsection');
+            var wtrList = document.getElementById('words-to-review-list');
+            wtrList.innerHTML = '';
+            if (wordsToReview.length === 0) {
+                wtrSub.setAttribute('hidden', '');
             } else {
-                document.getElementById('pacing-subsection').style.display = 'none';
+                wtrSub.removeAttribute('hidden');
+                wordsToReview.forEach(function(item) {
+                    var chip = document.createElement('span');
+                    chip.className = 'review-word-chip';
+                    var word = document.createElement('strong');
+                    word.textContent = item.word;
+                    chip.appendChild(word);
+                    var src = document.createElement('span');
+                    src.className = 'review-word-source';
+                    src.textContent = '\u00b7 Q' + item.questions.join(',Q');
+                    chip.appendChild(src);
+                    wtrList.appendChild(chip);
+                });
             }
 
-            // Contextual takeaway
+            // Takeaway — generic, positive, method-focused.
+            // Only mention performance for a clear "nailed it" moment or Q1→Q5 improvement.
             var takeawayEl = document.getElementById('takeaway-text');
-            var takeawayHtml = '';
-            if (totalQuestions === 0) {
-                takeawayHtml = '<strong>Well done.</strong> Keep practicing to build fluency with the method.';
-            } else if (correctFirstTryCount === totalQuestions) {
-                takeawayHtml = '<strong>Perfect run.</strong> You\u2019ve internalized the Kaplan Method \u2014 try a harder question set next.';
+            var parts = ['<strong>Nice work in this session.</strong>'];
+
+            var nailedIndex = findNailedQuestion(results);
+            if (nailedIndex !== null) {
+                parts.push('You totally nailed both the clues and the prediction on <strong>question ' + (nailedIndex + 1) + '</strong> \u2014 that was great.');
             } else {
-                // Find strongest and weakest clue types by ratio
-                var weakest = null, strongest = null;
-                Object.keys(byClueType).forEach(function(type) {
-                    var d = byClueType[type];
-                    var ratio = d.correct / d.total;
-                    if (weakest === null || ratio < weakest.ratio) weakest = { type: type, ratio: ratio, data: d };
-                    if (strongest === null || ratio > strongest.ratio) strongest = { type: type, ratio: ratio, data: d };
-                });
-                var intro = correctFirstTryCount / totalQuestions >= 0.6 ? 'Strong work.' : 'Good start.';
-                takeawayHtml = '<strong>' + intro + '</strong> ';
-                if (strongest && strongest.ratio === 1 && weakest && weakest.ratio < 1 && strongest.type !== weakest.type) {
-                    takeawayHtml += 'You nailed <strong>' + (clueTypeLabels[strongest.type] || strongest.type).toLowerCase() + '</strong>. <strong>' + (clueTypeLabels[weakest.type] || weakest.type) + '</strong> is where to focus next. ';
-                } else if (weakest && weakest.ratio < 1) {
-                    takeawayHtml += '<strong>' + (clueTypeLabels[weakest.type] || weakest.type) + '</strong> is where to focus next. ';
-                }
-                if (firstWrongQuestionNum !== null) {
-                    takeawayHtml += '<strong>Come back tomorrow to review Q' + firstWrongQuestionNum + '</strong> \u2014 spaced repetition doubles retention.';
+                var improvement = detectImprovement(results);
+                if (improvement) parts.push(improvement);
+            }
+
+            parts.push('Keep working on reading for clues and making strong predictions. As you work on more Sentence Equivalence questions, move through each step of the method until it becomes second nature.');
+
+            takeawayEl.innerHTML = parts.join(' ');
+        }
+
+        // A question is "nailed" when the student demonstrated the full method
+        // — found the pivot AND key clue, made a meaning-matching prediction,
+        // AND picked the correct pair on first try. Only promotes AI-backed
+        // questions so we're confident about the callout.
+        function findNailedQuestion(results) {
+            for (var i = 0; i < results.length; i++) {
+                var r = results[i];
+                if (!r) continue;
+                var ai1 = r.aiStep1;
+                var ai2 = r.aiStep2;
+                if (ai1 && ai2 && ai1.pivotFound && ai1.clueFound && ai2.meaningMatch && r.correctFirstTry) {
+                    return i;
                 }
             }
-            takeawayEl.innerHTML = takeawayHtml;
+            return null;
+        }
+
+        // Detect improvement from Q1 to Q5 on predictions AND/OR correctness.
+        // Returns a coaching-friendly string, or null if no clear improvement.
+        function detectImprovement(results) {
+            if (!results || results.length < 2) return null;
+            var first = results[0];
+            var last = results[results.length - 1];
+            if (!first || !last) return null;
+
+            var predictionImproved = first.aiStep2 && last.aiStep2 &&
+                                     first.aiStep2.meaningMatch === false &&
+                                     last.aiStep2.meaningMatch === true;
+            var accuracyImproved   = first.correctFirstTry === false && last.correctFirstTry === true;
+
+            if (predictionImproved && accuracyImproved) {
+                return 'And your predictions and selections both sharpened from question 1 to question ' + results.length + ' \u2014 that\'s the method clicking into place.';
+            }
+            if (predictionImproved) {
+                return 'Your predictions got sharper from question 1 to question ' + results.length + ' \u2014 that\'s the method clicking into place.';
+            }
+            if (accuracyImproved) {
+                return 'Your answer selections got stronger from question 1 to question ' + results.length + ' \u2014 that\'s the method clicking into place.';
+            }
+            return null;
         }
 
         document.addEventListener('keydown', function(e) {
