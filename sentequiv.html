@@ -178,10 +178,18 @@
         .method-step-num { flex-shrink: 0; width: 26px; height: 26px; background: var(--kaplan-purple); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-top: 1px; }
 
         /* Student-answer panel (Step 1 & 2 side-by-side compare) */
-        .student-answer-panel { padding: 18px 20px; border-radius: 14px; background: var(--kaplan-white); border: 1.5px dashed #C7CDD6; }
-        .student-answer-panel h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; color: var(--kaplan-slate); margin-bottom: 6px; }
-        .student-answer-panel p { font-size: 16px; line-height: 1.6; color: var(--kaplan-charcoal); font-style: italic; }
-        .student-answer-panel p:empty::before { content: "(no answer entered)"; color: #9CA3AF; font-style: italic; }
+        /* Step 3 prediction recall (student vs expert) */
+        .prediction-recall { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 4px; }
+        @media (min-width: 640px) { .prediction-recall { grid-template-columns: 1fr 1fr; } }
+        .prediction-pill { padding: 14px 16px; border-radius: 12px; border: 1px solid transparent; }
+        .prediction-pill.student { background: var(--kaplan-bg); border-color: var(--kaplan-border); }
+        .prediction-pill.expert { background: #E8EFFE; border-color: #B3C9F8; }
+        .prediction-label { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 6px; }
+        .prediction-pill.student .prediction-label { color: var(--kaplan-slate); }
+        .prediction-pill.expert .prediction-label { color: var(--text-on-blue-bg); }
+        .prediction-text { font-size: 15px; line-height: 1.5; color: var(--kaplan-charcoal); margin: 0; }
+        .prediction-pill.expert .prediction-text { color: var(--text-on-blue-bg); }
+        .prediction-text:empty::before { content: "(no prediction captured)"; color: #9CA3AF; font-style: italic; }
 
         /* Option-letter badges (A-F) */
         .option-card { display: flex; align-items: center; gap: 12px; }
@@ -508,10 +516,6 @@
                             <label for="clue-input" class="field-label">Your analysis of clues/pivots:</label>
                             <textarea id="clue-input" placeholder="Note down pivot words or clues here..." aria-describedby="step1-feedback-text"></textarea>
                         </div>
-                        <div id="step1-your-answer" class="student-answer-panel" hidden>
-                            <h4>Your Analysis</h4>
-                            <p id="step1-your-answer-text"></p>
-                        </div>
                         <div id="step1-ai-coach" class="ai-coach-card" aria-live="polite">
                             <div class="ai-coach-header">
                                 <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
@@ -547,10 +551,6 @@
                             <label for="prediction-input" class="field-label">My prediction:</label>
                             <input type="text" id="prediction-input" placeholder="Enter your predicted word..." aria-describedby="step2-feedback-text">
                         </div>
-                        <div id="step2-your-answer" class="student-answer-panel" hidden>
-                            <h4>Your Prediction</h4>
-                            <p id="step2-your-answer-text"></p>
-                        </div>
                         <div id="step2-ai-coach" class="ai-coach-card" aria-live="polite">
                             <div class="ai-coach-header">
                                 <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
@@ -580,6 +580,16 @@
                                 <div id="step3-hint-body" class="hint-body" hidden>
                                     <p>Look for a pair of synonyms that both align with your predicted meaning.</p>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="prediction-recall" aria-label="Your prediction and the expert's prediction">
+                            <div class="prediction-pill student">
+                                <span class="prediction-label">Your prediction</span>
+                                <p id="step3-your-prediction" class="prediction-text"></p>
+                            </div>
+                            <div class="prediction-pill expert">
+                                <span class="prediction-label">Expert prediction</span>
+                                <p id="step3-expert-prediction" class="prediction-text"></p>
                             </div>
                         </div>
                         <fieldset id="options-grid" class="options-grid" aria-describedby="selection-status">
@@ -1140,13 +1150,9 @@
                 optionsGrid.appendChild(btn);
             });
 
-            // Hide all feedback and student-answer panels on question load
+            // Hide all feedback panels on question load
             document.querySelectorAll('.feedback-box').forEach(function(f) { f.classList.remove('active'); });
             document.getElementById('selection-warning').classList.remove('visible');
-            document.getElementById('step1-your-answer').setAttribute('hidden', '');
-            document.getElementById('step2-your-answer').setAttribute('hidden', '');
-            document.getElementById('step1-your-answer-text').textContent = '';
-            document.getElementById('step2-your-answer-text').textContent = '';
             hideCoach(1);
             hideCoach(2);
 
@@ -1205,9 +1211,18 @@
             currentStep = step;
             isFeedbackState = false;
             currentStepStart = Date.now();
+            if (step === 3) updateStep3PredictionRecall();
             updateUI();
             announce('Step ' + step + ' of 4: ' + stepInstructions[step - 1]);
             document.getElementById('step' + step).focus();
+        }
+
+        function updateStep3PredictionRecall() {
+            var q = questions[currentQuestionIndex];
+            var yourEl = document.getElementById('step3-your-prediction');
+            var expertEl = document.getElementById('step3-expert-prediction');
+            if (yourEl) yourEl.textContent = (predictionInput.value || '').trim();
+            if (expertEl) expertEl.textContent = q.prediction || '';
         }
 
         function updateUI() {
@@ -1256,8 +1271,6 @@
                         announce('Please enter your clue analysis before continuing.');
                         return clueInput.focus();
                     }
-                    document.getElementById('step1-your-answer-text').textContent = clueInput.value.trim();
-                    document.getElementById('step1-your-answer').removeAttribute('hidden');
                     document.getElementById('step1-feedback-text').textContent = q.clues;
                     document.getElementById('step1-feedback').classList.add('active');
                     announce('Expert clue analysis: ' + q.clues);
@@ -1296,8 +1309,6 @@
                         announce('Please enter your prediction before continuing.');
                         return predictionInput.focus();
                     }
-                    document.getElementById('step2-your-answer-text').textContent = predictionInput.value.trim();
-                    document.getElementById('step2-your-answer').removeAttribute('hidden');
                     document.getElementById('step2-feedback-text').textContent = q.prediction;
                     document.getElementById('step2-feedback').classList.add('active');
                     announce('Expert prediction: ' + q.prediction);
