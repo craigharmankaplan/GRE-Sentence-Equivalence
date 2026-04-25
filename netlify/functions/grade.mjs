@@ -170,7 +170,7 @@ function buildPromptAndSchema(step, payload) {
             'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
             '- pivotFound (boolean): did the student identify the pivot (or equivalent)?\n' +
             '- clueFound (boolean): did the student identify the key clue (or equivalent phrase)?\n' +
-            '- nudge (string, 22 words max): one coaching sentence addressed to "you". Be specific about what they got and what to push for. Do not reveal the answer.';
+            '- nudge (string, 22 words max): one coaching sentence addressed to "you". Be specific about what they got and what to push for. Do not reveal the answer. For emphasis use HTML tags <strong> and <em> only — NEVER use asterisks (*) or underscores (_) for emphasis.';
         const schema = {
             type: 'object',
             properties: {
@@ -193,7 +193,7 @@ function buildPromptAndSchema(step, payload) {
             'Evaluate leniently — the prediction just needs to be semantically close to one of the target meanings.\n\n' +
             'Output ONLY a JSON object with these fields. No preamble, no explanation outside the object, no markdown fences.\n' +
             '- meaningMatch (boolean): does the prediction match the required meaning?\n' +
-            '- nudge (string, 22 words max): one coaching sentence addressed to "you". If correct, affirm briefly. If off, hint at the direction without revealing the answer.';
+            '- nudge (string, 22 words max): one coaching sentence addressed to "you". If correct, affirm briefly. If off, hint at the direction without revealing the answer. For emphasis use HTML tags <strong> and <em> only — NEVER use asterisks (*) or underscores (_) for emphasis.';
         const schema = {
             type: 'object',
             properties: {
@@ -225,16 +225,16 @@ function buildPromptAndSchema(step, payload) {
             '- Acknowledges what they did well across the four steps (clues, prediction, matching).\n' +
             '- Calls out the specific gap if any — weak clue analysis, off-target prediction, or vocabulary issue with a wrong selection.\n' +
             '- References their actual prediction word when explaining why a wrong pick was off (e.g., "X doesn\'t match your prediction of Y").\n' +
-            '- Is encouraging but honest. Address the student as "you".\n\n' +
-            'Also return wordsToReview: from their incorrect selections only, list any words worth adding to a GRE vocab study list (0-2 items, skip truly common words like "clear" or "simple"). If all selections were correct, return an empty array.\n\n' +
-            'Output ONLY a JSON object. No preamble, no markdown fences.';
+            '- Is encouraging but honest. Address the student as "you".\n' +
+            '- For emphasis use HTML tags <strong> and <em> only — NEVER use asterisks (*) or underscores (_) for emphasis.\n\n' +
+            'Output ONLY a JSON object. No preamble, no markdown fences.\n' +
+            '- summary (string): the 2-sentence recap text addressed to "you".';
         const schema = {
             type: 'object',
             properties: {
-                summary: { type: 'string' },
-                wordsToReview: { type: 'array', items: { type: 'string' } }
+                summary: { type: 'string' }
             },
-            required: ['summary', 'wordsToReview']
+            required: ['summary']
         };
         return { prompt, schema };
     }
@@ -265,7 +265,8 @@ function buildPromptAndSchema(step, payload) {
         '   (a) There is a specific question where the student nailed BOTH clues AND prediction AND picked the correct pair — if so, call that question out by number ("you totally nailed both on question 2, by the way — that was great").\n' +
         '   (b) There is clear improvement from early questions to later questions in predictions or correct answers — if so, briefly note the growth.\n' +
         '4. Do NOT say "come back tomorrow" or suggest trying questions a second time.\n' +
-        '5. CLOSE with forward-looking method-focused guidance about working the four-step process until it becomes second nature.\n\n' +
+        '5. CLOSE with forward-looking method-focused guidance about working the four-step process until it becomes second nature.\n' +
+        '6. For emphasis use HTML tags <strong> and <em> only — NEVER use asterisks (*) or underscores (_) for emphasis.\n\n' +
         'Reference tone and structure:\n' +
         '"Nice work in this session. Keep working on reading for clues and making strong predictions. You totally nailed both on question 2, by the way — that was great. As you work on more Sentence Equivalence questions, make sure you move through each step of the method until it becomes second nature."\n\n' +
         'Output ONLY a JSON object. No preamble, no markdown fences.\n' +
