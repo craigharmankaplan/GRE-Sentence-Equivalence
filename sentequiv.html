@@ -282,28 +282,35 @@
         .ai-coach-words { margin-top: 10px; font-size: 13px; color: var(--text-on-yellow-bg); line-height: 1.5; }
         .ai-coach-words:empty { display: none; }
         .ai-coach-words-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; margin-right: 6px; }
-        .ai-coach-word { display: inline-block; padding: 2px 10px; margin: 2px 4px 2px 0; border-radius: 999px; background: var(--kaplan-white); border: 1px solid #F5DCA0; color: var(--text-on-yellow-bg); font-weight: 700; }
+        .ai-coach-word { display: inline-block; padding: 2px 10px; margin: 2px 4px 2px 0; border-radius: 999px; font-weight: 700; font-size: 13px; }
+        .ai-coach-word.wrong  { background: var(--kaplan-white); border: 1px solid #F5C6C0; color: #B91C1C; }
+        .ai-coach-word.missed { background: var(--kaplan-white); border: 1px solid #B6ECC9; color: var(--text-on-green-bg); }
 
         /* Completion-screen vocab-to-review chips */
         .subsection-help { font-size: 13px; color: var(--kaplan-slate); line-height: 1.45; margin: -4px 0 12px; }
         .words-review-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-        .review-word-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; background: #FDECEB; border: 1px solid #F5C6C0; color: #B91C1C; font-size: 14px; font-weight: 700; }
-        .review-word-source { font-size: 11px; font-weight: 600; color: #B91C1C; opacity: 0.7; letter-spacing: 0.04em; }
+        .review-word-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 700; border: 1px solid transparent; }
+        .review-word-chip.wrong  { background: #FDECEB; border-color: #F5C6C0; color: #B91C1C; }
+        .review-word-chip.missed { background: #EAFAF1; border-color: #B6ECC9; color: var(--text-on-green-bg); }
+        .review-word-source { font-size: 11px; font-weight: 600; opacity: 0.75; letter-spacing: 0.04em; }
 
         /* In-app feedback form */
         .feedback-panel { background: var(--kaplan-white); border: 1px solid var(--kaplan-border); border-radius: 16px; padding: 28px; }
         .feedback-panel h3 { font-family: 'Merriweather', 'Georgia', serif; font-size: 18px; font-weight: 700; color: var(--kaplan-purple); margin-bottom: 6px; }
-        .feedback-panel .feedback-sub { font-size: 14px; color: var(--kaplan-slate); margin-bottom: 20px; }
-        .rating-row { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
-        .rating-star { background: none; border: none; font-size: 32px; cursor: pointer; color: #D1D5DB; transition: color 0.15s, transform 0.15s; padding: 4px; line-height: 1; }
-        .rating-star:hover, .rating-star.active { color: var(--kaplan-yellow); }
-        .rating-star:hover { transform: scale(1.1); }
-        .rating-star:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-radius: 6px; }
-        .reaction-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
-        .reaction-btn { padding: 8px 14px; border-radius: 999px; border: 2px solid var(--kaplan-border); background: var(--kaplan-white); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--kaplan-charcoal); min-height: 36px; }
-        .reaction-btn:hover { border-color: var(--kaplan-purple); }
-        .reaction-btn.selected { background: var(--kaplan-purple); color: var(--kaplan-white); border-color: var(--kaplan-purple); }
-        .reaction-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .feedback-panel .feedback-sub { font-size: 14px; color: var(--kaplan-slate); margin-bottom: 24px; }
+        .feedback-section-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--kaplan-charcoal); margin: 0 0 10px; display: block; }
+        .feedback-section-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--kaplan-slate); font-size: 12px; margin-left: 4px; }
+        .rating-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 0 0 24px; }
+        .rating-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; background: none; border: 2px solid transparent; border-radius: 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.15s; }
+        .rating-cell:hover { background: var(--kaplan-bg); }
+        .rating-cell:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+        .rating-cell.active { background: #FFF8EB; border-color: var(--kaplan-yellow); }
+        .rating-star { font-size: 30px; color: #D1D5DB; transition: color 0.15s, transform 0.15s; line-height: 1; }
+        .rating-cell:hover .rating-star { transform: scale(1.08); }
+        .rating-cell.active .rating-star,
+        .rating-cell:hover .rating-star { color: var(--kaplan-yellow); }
+        .rating-descriptor { font-size: 12px; font-weight: 600; color: var(--kaplan-slate); text-align: center; line-height: 1.2; }
+        .rating-cell.active .rating-descriptor { color: var(--text-on-yellow-bg); font-weight: 700; }
         .feedback-textarea { width: 100%; padding: 12px 14px; font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; border: 2px solid var(--kaplan-border); border-radius: 10px; background: var(--kaplan-bg); min-height: 80px; resize: vertical; color: var(--kaplan-charcoal); }
         .feedback-textarea:focus-visible { outline: none; border-color: var(--kaplan-purple); background: var(--kaplan-white); box-shadow: 0 0 0 3px rgba(36,15,110,0.15); }
         .feedback-submit-row { margin-top: 16px; display: flex; justify-content: flex-end; }
@@ -341,7 +348,7 @@
 
                 <div class="settings-row">
                     <div style="flex:1;">
-                        <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);">AI Coach</label>
+                        <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);">Your Kaplan Coach</label>
                         <div style="font-size:12px;color:var(--kaplan-slate);margin-top:4px;">Personalized coaching via the proxy: clue analysis (Step 1), prediction check (Step 2), and a full-journey recap after Check My Answer (Step 4).</div>
                     </div>
                     <button id="ai-toggle" class="toggle-switch" role="switch" aria-checked="false" aria-label="Enable AI coaching" onclick="toggleAI()"></button>
@@ -466,22 +473,31 @@
                     <div class="feedback-panel" id="feedback-panel">
                         <h3>How was this practice session?</h3>
                         <p class="feedback-sub">Your feedback shapes what we build next.</p>
+                        <p class="feedback-section-label">How was it?</p>
                         <div class="rating-row" role="radiogroup" aria-label="Rate this practice session (1 to 5 stars)">
-                            <button type="button" class="rating-star" data-rating="1" role="radio" aria-checked="false" aria-label="1 star" onclick="selectRating(1)">&#9733;</button>
-                            <button type="button" class="rating-star" data-rating="2" role="radio" aria-checked="false" aria-label="2 stars" onclick="selectRating(2)">&#9733;</button>
-                            <button type="button" class="rating-star" data-rating="3" role="radio" aria-checked="false" aria-label="3 stars" onclick="selectRating(3)">&#9733;</button>
-                            <button type="button" class="rating-star" data-rating="4" role="radio" aria-checked="false" aria-label="4 stars" onclick="selectRating(4)">&#9733;</button>
-                            <button type="button" class="rating-star" data-rating="5" role="radio" aria-checked="false" aria-label="5 stars" onclick="selectRating(5)">&#9733;</button>
+                            <button type="button" class="rating-cell" data-rating="1" role="radio" aria-checked="false" aria-label="1 star, Frustrated" onclick="selectRating(1)">
+                                <span class="rating-star" aria-hidden="true">&#9733;</span>
+                                <span class="rating-descriptor">Frustrated</span>
+                            </button>
+                            <button type="button" class="rating-cell" data-rating="2" role="radio" aria-checked="false" aria-label="2 stars, Confused" onclick="selectRating(2)">
+                                <span class="rating-star" aria-hidden="true">&#9733;</span>
+                                <span class="rating-descriptor">Confused</span>
+                            </button>
+                            <button type="button" class="rating-cell" data-rating="3" role="radio" aria-checked="false" aria-label="3 stars, Just okay" onclick="selectRating(3)">
+                                <span class="rating-star" aria-hidden="true">&#9733;</span>
+                                <span class="rating-descriptor">Just okay</span>
+                            </button>
+                            <button type="button" class="rating-cell" data-rating="4" role="radio" aria-checked="false" aria-label="4 stars, Solid" onclick="selectRating(4)">
+                                <span class="rating-star" aria-hidden="true">&#9733;</span>
+                                <span class="rating-descriptor">Solid</span>
+                            </button>
+                            <button type="button" class="rating-cell" data-rating="5" role="radio" aria-checked="false" aria-label="5 stars, Loved it" onclick="selectRating(5)">
+                                <span class="rating-star" aria-hidden="true">&#9733;</span>
+                                <span class="rating-descriptor">Loved it</span>
+                            </button>
                         </div>
-                        <div class="reaction-row" role="group" aria-label="Quick reactions">
-                            <button type="button" class="reaction-btn" data-reaction="loved" onclick="toggleReaction(this)">&#128079; Loved it</button>
-                            <button type="button" class="reaction-btn" data-reaction="solid" onclick="toggleReaction(this)">&#128077; Solid</button>
-                            <button type="button" class="reaction-btn" data-reaction="confused" onclick="toggleReaction(this)">&#129300; Confused</button>
-                            <button type="button" class="reaction-btn" data-reaction="frustrated" onclick="toggleReaction(this)">&#128533; Frustrated</button>
-                            <button type="button" class="reaction-btn" data-reaction="idea" onclick="toggleReaction(this)">&#128161; Have an idea</button>
-                        </div>
-                        <label for="feedback-comment" class="sr-only">Comments</label>
-                        <textarea id="feedback-comment" class="feedback-textarea" placeholder="What would you improve? (optional)"></textarea>
+                        <label for="feedback-comment" class="feedback-section-label">Anything else? <span class="feedback-section-hint">(optional)</span></label>
+                        <textarea id="feedback-comment" class="feedback-textarea" placeholder="Ideas, suggestions, or what you'd improve..."></textarea>
                         <div class="feedback-submit-row">
                             <button type="button" class="btn-primary" onclick="submitFeedback()">Submit feedback</button>
                         </div>
@@ -525,7 +541,7 @@
                         <div id="step1-ai-coach" class="ai-coach-card" aria-live="polite">
                             <div class="ai-coach-header">
                                 <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
-                                <span class="ai-coach-label">AI Coach</span>
+                                <span class="ai-coach-label">Your Kaplan Coach</span>
                             </div>
                             <p id="step1-ai-coach-body" class="ai-coach-body"></p>
                             <div id="step1-ai-coach-indicators" class="ai-coach-match-indicators"></div>
@@ -560,7 +576,7 @@
                         <div id="step2-ai-coach" class="ai-coach-card" aria-live="polite">
                             <div class="ai-coach-header">
                                 <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
-                                <span class="ai-coach-label">AI Coach</span>
+                                <span class="ai-coach-label">Your Kaplan Coach</span>
                             </div>
                             <p id="step2-ai-coach-body" class="ai-coach-body"></p>
                             <div id="step2-ai-coach-indicators" class="ai-coach-match-indicators"></div>
@@ -651,7 +667,7 @@
                         <div id="step4-ai-coach" class="ai-coach-card" aria-live="polite">
                             <div class="ai-coach-header">
                                 <span class="ai-coach-icon" aria-hidden="true"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.91 8.26 2 9l6.91 6.74L7.18 23 12 19.26 16.82 23 15.09 15.74 22 9l-7.91-.74L12 2z"/></svg></span>
-                                <span class="ai-coach-label">AI Coach &middot; Journey Recap</span>
+                                <span class="ai-coach-label">Your Kaplan Coach &middot; Journey Recap</span>
                             </div>
                             <p id="step4-ai-coach-body" class="ai-coach-body"></p>
                             <div id="step4-ai-coach-words" class="ai-coach-words"></div>
@@ -877,7 +893,7 @@
             var body = document.getElementById('step' + step + '-ai-coach-body');
             var indEl = document.getElementById('step' + step + '-ai-coach-indicators');
             body.className = 'ai-coach-body';
-            body.textContent = nudge;
+            body.innerHTML = sanitizeCoachText(nudge);
             if (indEl) {
                 indEl.innerHTML = '';
                 (indicators || []).forEach(function(ind) {
@@ -888,6 +904,35 @@
                 });
             }
             card.classList.add('visible');
+        }
+
+        // Render coach text with limited HTML support: <b>, <strong>, <i>, <em>.
+        // Also converts *asterisk*/_underscore_ markdown to emphasis tags as a fallback,
+        // since Gemini sometimes emits markdown despite instructions.
+        // Everything else is escaped.
+        function sanitizeCoachText(raw) {
+            if (raw == null) return '';
+            var s = String(raw);
+
+            // 1. Escape all HTML entities first
+            s = s.replace(/&/g, '&amp;')
+                 .replace(/</g, '&lt;')
+                 .replace(/>/g, '&gt;')
+                 .replace(/"/g, '&quot;')
+                 .replace(/'/g, '&#039;');
+
+            // 2. Re-allow specific inline emphasis tags by reversing their escape
+            s = s.replace(/&lt;(\/?(?:b|strong|i|em))&gt;/gi, '<$1>');
+
+            // 3. Convert markdown emphasis as a fallback
+            //    **bold** or __bold__
+            s = s.replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>');
+            s = s.replace(/__([^_\n]+?)__/g, '<strong>$1</strong>');
+            //    *italic* or _italic_  (single asterisks/underscores)
+            s = s.replace(/(^|[^*\w])\*([^*\n]+?)\*(?!\w)/g, '$1<em>$2</em>');
+            s = s.replace(/(^|[^_\w])_([^_\n]+?)_(?!\w)/g, '$1<em>$2</em>');
+
+            return s;
         }
         function hideCoach(step) {
             document.getElementById('step' + step + '-ai-coach').classList.remove('visible');
@@ -972,22 +1017,31 @@
             });
         }
 
-        function showStep4CoachResult(summary, wordsToReview) {
+        function showStep4CoachResult(summary, wrongSelections, missedCorrect) {
             var card = document.getElementById('step4-ai-coach');
             var body = document.getElementById('step4-ai-coach-body');
             var wordsEl = document.getElementById('step4-ai-coach-words');
             body.className = 'ai-coach-body';
-            body.textContent = summary;
+            body.innerHTML = sanitizeCoachText(summary);
             wordsEl.innerHTML = '';
-            if (Array.isArray(wordsToReview) && wordsToReview.length > 0) {
+            var anyToReview = (wrongSelections && wrongSelections.length) || (missedCorrect && missedCorrect.length);
+            if (anyToReview) {
                 var label = document.createElement('span');
                 label.className = 'ai-coach-words-label';
                 label.textContent = 'Worth reviewing:';
                 wordsEl.appendChild(label);
-                wordsToReview.forEach(function(w) {
+                (wrongSelections || []).forEach(function(w) {
                     var chip = document.createElement('span');
-                    chip.className = 'ai-coach-word';
+                    chip.className = 'ai-coach-word wrong';
                     chip.textContent = w;
+                    chip.title = 'You picked this, but it isn\'t in the correct pair';
+                    wordsEl.appendChild(chip);
+                });
+                (missedCorrect || []).forEach(function(w) {
+                    var chip = document.createElement('span');
+                    chip.className = 'ai-coach-word missed';
+                    chip.textContent = w;
+                    chip.title = 'Correct answer you didn\'t pick';
                     wordsEl.appendChild(chip);
                 });
             }
@@ -1099,21 +1153,15 @@
         // ──────────────────────────────────────────────────────────────
         // Feedback form (on completion screen)
         // ──────────────────────────────────────────────────────────────
-        var feedbackState = { rating: 0, reactions: [] };
+        var feedbackState = { rating: 0 };
 
         function selectRating(n) {
             feedbackState.rating = n;
-            document.querySelectorAll('.rating-star').forEach(function(star) {
-                var val = parseInt(star.getAttribute('data-rating'), 10);
-                star.classList.toggle('active', val <= n);
-                star.setAttribute('aria-checked', val === n ? 'true' : 'false');
+            document.querySelectorAll('.rating-cell').forEach(function(cell) {
+                var val = parseInt(cell.getAttribute('data-rating'), 10);
+                cell.classList.toggle('active', val === n);
+                cell.setAttribute('aria-checked', val === n ? 'true' : 'false');
             });
-        }
-        function toggleReaction(btn) {
-            var reaction = btn.getAttribute('data-reaction');
-            var idx = feedbackState.reactions.indexOf(reaction);
-            if (idx === -1) { feedbackState.reactions.push(reaction); btn.classList.add('selected'); }
-            else { feedbackState.reactions.splice(idx, 1); btn.classList.remove('selected'); }
         }
         function submitFeedback() {
             var comment = document.getElementById('feedback-comment').value.trim();
@@ -1133,7 +1181,7 @@
             var feedbackRecord = {
                 session_id: sessionId,
                 rating: feedbackState.rating || null,
-                reactions: feedbackState.reactions,
+                reactions: [],
                 comment: comment || null,
                 session_summary: summary,
                 user_agent: navigator.userAgent,
@@ -1142,7 +1190,6 @@
 
             sendEvent('feedback_submitted', {
                 rating: feedbackState.rating,
-                reactions: feedbackState.reactions,
                 commentLength: comment.length,
                 hasComment: comment.length > 0
             });
@@ -1547,17 +1594,21 @@
             var q = questions[currentQuestionIndex];
             var isCorrect = selectedOptions.length === 2 && selectedOptions.every(function(o) { return q.correct.includes(o); });
             var wrongSelections = selectedOptions.filter(function(o) { return !q.correct.includes(o); });
+            var missedCorrect  = q.correct.filter(function(c) { return !selectedOptions.includes(c); });
 
             // Record result for this question (overwrite if they checked before)
-            sessionData.questionResults[currentQuestionIndex] = {
-                correct: isCorrect,
-                correctFirstTry: isCorrect && currentQuestionFirstAttempt,
-                clueType: q.clueType,
-                stepTimes: currentQuestionStepTimes.slice(),
-                selections: selectedOptions.slice(),
-                wrongSelections: wrongSelections,
-                aiWordsToReview: []
-            };
+            sessionData.questionResults[currentQuestionIndex] = Object.assign(
+                sessionData.questionResults[currentQuestionIndex] || {},
+                {
+                    correct: isCorrect,
+                    correctFirstTry: isCorrect && currentQuestionFirstAttempt,
+                    clueType: q.clueType,
+                    stepTimes: currentQuestionStepTimes.slice(),
+                    selections: selectedOptions.slice(),
+                    wrongSelections: wrongSelections,
+                    missedCorrect: missedCorrect
+                }
+            );
             saveSession();
 
             sendEvent('answer_checked', {
@@ -1611,19 +1662,17 @@
             // Kick off Step 4 AI journey recap
             if (isAIReady()) {
                 var qIndexAtCall = currentQuestionIndex;
+                var wrongAtCall = wrongSelections.slice();
+                var missedAtCall = missedCorrect.slice();
                 showCoachLoading(4);
                 gradeStep4().then(function(result) {
                     if (!result) { hideCoach(4); return; }
-                    showStep4CoachResult(result.summary, result.wordsToReview || []);
-                    var res = sessionData.questionResults[qIndexAtCall];
-                    if (res && Array.isArray(result.wordsToReview)) {
-                        res.aiWordsToReview = result.wordsToReview.slice();
-                        saveSession();
-                    }
+                    showStep4CoachResult(result.summary, wrongAtCall, missedAtCall);
                     sendEvent('ai_grade_step4', {
                         questionIndex: qIndexAtCall,
                         summary: result.summary,
-                        wordsToReview: result.wordsToReview
+                        wrongSelections: wrongAtCall,
+                        missedCorrect: missedAtCall
                     });
                 }).catch(function(err) {
                     hideCoach(4);
@@ -1762,24 +1811,22 @@
         function aggregateWordsToReview(results) {
             var byWord = {};
             var order = [];
+            function add(word, qNum, type) {
+                if (!word) return;
+                var key = String(word).toLowerCase();
+                if (!byWord[key]) {
+                    byWord[key] = { word: word, questions: [], type: type };
+                    order.push(key);
+                }
+                if (byWord[key].questions.indexOf(qNum) === -1) {
+                    byWord[key].questions.push(qNum);
+                }
+            }
             results.forEach(function(r, i) {
                 if (!r) return;
-                // Prefer the AI's curated list; fall back to all wrong selections if AI didn't run
-                var source = (Array.isArray(r.aiWordsToReview) && r.aiWordsToReview.length > 0)
-                    ? r.aiWordsToReview
-                    : (Array.isArray(r.wrongSelections) ? r.wrongSelections : []);
-                source.forEach(function(w) {
-                    if (!w) return;
-                    var key = String(w).toLowerCase();
-                    if (!byWord[key]) {
-                        byWord[key] = { word: w, questions: [] };
-                        order.push(key);
-                    }
-                    var qNum = i + 1;
-                    if (byWord[key].questions.indexOf(qNum) === -1) {
-                        byWord[key].questions.push(qNum);
-                    }
-                });
+                var qNum = i + 1;
+                (Array.isArray(r.wrongSelections) ? r.wrongSelections : []).forEach(function(w) { add(w, qNum, 'wrong'); });
+                (Array.isArray(r.missedCorrect)   ? r.missedCorrect   : []).forEach(function(w) { add(w, qNum, 'missed'); });
             });
             return order.map(function(k) { return byWord[k]; });
         }
@@ -1835,7 +1882,10 @@
                 wtrSub.removeAttribute('hidden');
                 wordsToReview.forEach(function(item) {
                     var chip = document.createElement('span');
-                    chip.className = 'review-word-chip';
+                    chip.className = 'review-word-chip ' + (item.type === 'missed' ? 'missed' : 'wrong');
+                    chip.title = item.type === 'missed'
+                        ? 'A correct answer you didn\'t pick'
+                        : 'You picked this, but it wasn\'t in the correct pair';
                     var word = document.createElement('strong');
                     word.textContent = item.word;
                     chip.appendChild(word);
@@ -1855,7 +1905,7 @@
                 takeawayEl.innerHTML = '<em style="opacity:0.75;">Preparing your session recap<span class="ai-coach-loading-dots"></span></em>';
                 gradeSession(results).then(function(res) {
                     if (res && typeof res.summary === 'string' && res.summary.trim()) {
-                        takeawayEl.textContent = res.summary.trim();
+                        takeawayEl.innerHTML = sanitizeCoachText(res.summary.trim());
                         sendEvent('ai_grade_session', {
                             totalQuestions: results.length,
                             summary: res.summary
