@@ -1,0 +1,18 @@
+# Cloud Build configuration: deploys static site files to GCS
+# Triggered by pushes to the main branch (configured in Cloud Build trigger UI)
+
+steps:
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: 'sync-files-to-bucket'
+    args:
+      - '-m'
+      - 'rsync'
+      - '-r'
+      - '-d'
+      - '-x'
+      - '\.git.*|\.github.*|cloudbuild\.yaml|netlify\.toml|netlify/.*|.*\.md|.*\.sql|.*\.mjs|grade\.js'
+      - '.'
+      - 'gs://gre-sentequiv-ai-coach/'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
