@@ -230,40 +230,6 @@
         .takeaway { padding: 20px; border-radius: 14px; background: #F0EDFA; border: 1px solid #DDD6F3; color: var(--text-on-purple-bg); font-size: 15px; line-height: 1.6; }
         .takeaway strong { color: var(--kaplan-purple); }
 
-        /* Settings cog + modal */
-        .settings-cog { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: var(--kaplan-white); border: 1px solid var(--kaplan-border); color: var(--kaplan-purple); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 100; transition: background 0.2s, transform 0.2s; }
-        .settings-cog:hover { background: var(--kaplan-bg); transform: rotate(30deg); }
-        .settings-cog:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
-        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(36,15,110,0.35); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
-        .modal-backdrop.active { display: flex; }
-        .modal-card { background: var(--kaplan-white); border-radius: 16px; max-width: 520px; width: 100%; box-shadow: 0 20px 60px rgba(36,15,110,0.25); overflow: hidden; animation: modalIn 0.25s ease-out; }
-        @keyframes modalIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--kaplan-border); display: flex; justify-content: space-between; align-items: center; background: var(--kaplan-bg); }
-        .modal-header h2 { font-size: 16px; font-weight: 700; color: var(--kaplan-purple); margin: 0; }
-        .modal-close { background: none; border: none; color: var(--kaplan-slate); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .modal-close:hover { background: var(--kaplan-bg); color: var(--kaplan-charcoal); }
-        .modal-close:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
-        .modal-body { padding: 24px; }
-        .modal-body > * + * { margin-top: 20px; }
-        .settings-warning { padding: 12px 14px; border-radius: 10px; background: #FFF8EB; border: 1px solid #F5DCA0; color: var(--text-on-yellow-bg); font-size: 13px; line-height: 1.5; }
-        .settings-field label { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--kaplan-charcoal); margin-bottom: 6px; }
-        .settings-field input, .settings-field select { width: 100%; padding: 12px 14px; font-size: 14px; border: 2px solid var(--kaplan-border); border-radius: 10px; font-family: 'Open Sans', 'Arial', sans-serif; background: var(--kaplan-white); color: var(--kaplan-charcoal); }
-        .settings-field input:focus-visible, .settings-field select:focus-visible { outline: none; border-color: var(--kaplan-purple); box-shadow: 0 0 0 3px rgba(36,15,110,0.15); }
-        .settings-field-help { margin-top: 6px; font-size: 12px; color: var(--kaplan-slate); }
-        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .toggle-switch { position: relative; width: 44px; height: 24px; background: #D1D5DB; border-radius: 999px; cursor: pointer; transition: background 0.2s; border: none; flex-shrink: 0; }
-        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .toggle-switch.on { background: var(--kaplan-purple); }
-        .toggle-switch.on::after { transform: translateX(20px); }
-        .toggle-switch:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
-        .settings-action-btn { padding: 10px 16px; border-radius: 8px; font-family: 'Open Sans', 'Arial', sans-serif; font-weight: 700; font-size: 13px; border: 2px solid var(--kaplan-purple); background: var(--kaplan-white); color: var(--kaplan-purple); cursor: pointer; transition: background 0.2s, color 0.2s; min-height: 40px; }
-        .settings-action-btn:hover { background: var(--kaplan-purple); color: var(--kaplan-white); }
-        .settings-action-btn.secondary { border-color: var(--kaplan-slate); color: var(--kaplan-slate); }
-        .settings-action-btn.secondary:hover { background: var(--kaplan-slate); color: var(--kaplan-white); }
-        .settings-action-btn.danger { border-color: var(--kaplan-red); color: var(--kaplan-red); }
-        .settings-action-btn.danger:hover { background: var(--kaplan-red); color: var(--kaplan-white); }
-        .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-
         /* AI coach card */
         .ai-coach-card { display: none; padding: 16px 18px; border-radius: 14px; background: #FFFBEE; border: 1.5px solid #F5DCA0; position: relative; }
         .ai-coach-card.visible { display: block; animation: slideIn 0.3s ease-out; }
@@ -327,74 +293,6 @@
 <body>
 
     <a href="#main-content" class="sr-only">Skip to Main Content</a>
-
-    <button id="settings-cog" class="settings-cog" aria-label="Open settings" onclick="openSettings()">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-    </button>
-
-    <div id="settings-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-title" onclick="closeSettingsOnBackdrop(event)">
-        <div class="modal-card" role="document">
-            <div class="modal-header">
-                <h2 id="settings-title">Settings &amp; Instructor Tools</h2>
-                <button class="modal-close" onclick="closeSettings()" aria-label="Close settings">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="settings-warning">
-                    <strong>Demo build.</strong> AI grading calls go through a server-side Netlify Function — the Gemini key lives in <code>GEMINI_API_KEY</code> on Netlify and never touches the browser. The Supabase anon key below <em>is</em> public-safe as long as RLS is configured to allow inserts only.
-                </div>
-
-                <div class="settings-row">
-                    <div style="flex:1;">
-                        <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);">Your Kaplan Coach</label>
-                        <div style="font-size:12px;color:var(--kaplan-slate);margin-top:4px;">Personalized coaching via the proxy: clue analysis (Step 1), prediction check (Step 2), and a full-journey recap after Check My Answer (Step 4).</div>
-                    </div>
-                    <button id="ai-toggle" class="toggle-switch" role="switch" aria-checked="false" aria-label="Enable AI coaching" onclick="toggleAI()"></button>
-                </div>
-
-                <div class="settings-field">
-                    <label for="model-select">Model</label>
-                    <select id="model-select">
-                        <option value="gemini-2.5-flash">gemini-2.5-flash (fast, recommended)</option>
-                        <option value="gemini-2.5-pro">gemini-2.5-pro (slower, more thorough)</option>
-                    </select>
-                    <div class="settings-field-help">Only <code>gemini-2.5-flash</code> and <code>gemini-2.5-pro</code> are allowed by the function.</div>
-                </div>
-
-                <div style="border-top: 1px solid var(--kaplan-border); padding-top: 20px;">
-                    <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);display:block;margin-bottom:10px;">Supabase backend</label>
-                    <div style="font-size:12px;color:var(--kaplan-slate);margin-bottom:12px;">Events and feedback POST to your Supabase REST API. Leave blank to keep everything client-side.</div>
-                    <div class="settings-field">
-                        <label for="supabase-url-input">Supabase Project URL</label>
-                        <input type="text" id="supabase-url-input" placeholder="https://xxxxx.supabase.co" autocomplete="off" spellcheck="false">
-                    </div>
-                    <div class="settings-field" style="margin-top:12px;">
-                        <label for="supabase-key-input">Anon key</label>
-                        <input type="password" id="supabase-key-input" placeholder="eyJ..." autocomplete="off" spellcheck="false">
-                        <div class="settings-field-help">Use the <strong>anon</strong> key, not the service role key. Pair with RLS policies that allow inserts only.</div>
-                    </div>
-                </div>
-
-                <div style="border-top: 1px solid var(--kaplan-border); padding-top: 20px;">
-                    <label style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--kaplan-charcoal);display:block;margin-bottom:10px;">Telemetry data</label>
-                    <div style="font-size:13px;color:var(--kaplan-slate);margin-bottom:12px;">
-                        <span id="telemetry-event-count">0</span> events captured this session.
-                    </div>
-                    <div class="settings-actions">
-                        <button class="settings-action-btn" onclick="exportTelemetry()">Export as JSON</button>
-                        <button class="settings-action-btn secondary" onclick="viewTelemetry()">View in console</button>
-                        <button class="settings-action-btn danger" onclick="clearTelemetry()">Clear</button>
-                    </div>
-                </div>
-
-                <div style="border-top: 1px solid var(--kaplan-border); padding-top: 20px; display:flex; justify-content:flex-end; gap:8px;">
-                    <button class="btn-primary" onclick="saveSettings()">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -818,56 +716,21 @@
         // ──────────────────────────────────────────────────────────────
         var SETTINGS_KEY = 'gre-se-settings-v1';
         var defaultSettings = {
-            aiEnabled: false,
+            aiEnabled: true,
             model: 'gemini-2.5-flash',
-            supabaseUrl: '',
-            supabaseAnonKey: ''
+            supabaseUrl: 'https://fdsasqtqefqmlocvhqvl.supabase.co',
+            supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkc2FzcXRxZWZxbWxvY3ZocXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNDUxNDksImV4cCI6MjA5MjYyMTE0OX0.ecG3W8wYNVX7CGoxroy20nJXzulcpPn3jbPaQZLRCnQ'
         };
         var settings = Object.assign({}, defaultSettings);
 
         function loadSettings() {
-            try {
-                var raw = localStorage.getItem(SETTINGS_KEY);
-                if (raw) Object.assign(settings, JSON.parse(raw));
-            } catch (e) {}
+            // AI coach is permanently on; Supabase creds are hardcoded.
+            // We deliberately ignore any older localStorage settings so previous
+            // visitors who had AI off (or stale Supabase creds) get the new defaults.
+            settings = Object.assign({}, defaultSettings);
         }
         function persistSettings() {
-            try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
-        }
-        function openSettings() {
-            document.getElementById('model-select').value = settings.model || 'gemini-2.5-flash';
-            var supaUrl = document.getElementById('supabase-url-input');
-            var supaKey = document.getElementById('supabase-key-input');
-            if (supaUrl) supaUrl.value = settings.supabaseUrl || '';
-            if (supaKey) supaKey.value = settings.supabaseAnonKey || '';
-            var toggle = document.getElementById('ai-toggle');
-            toggle.classList.toggle('on', !!settings.aiEnabled);
-            toggle.setAttribute('aria-checked', !!settings.aiEnabled);
-            document.getElementById('telemetry-event-count').textContent = telemetryQueue.length;
-            document.getElementById('settings-modal').classList.add('active');
-        }
-        function closeSettings() {
-            document.getElementById('settings-modal').classList.remove('active');
-        }
-        function closeSettingsOnBackdrop(e) {
-            if (e.target === e.currentTarget) closeSettings();
-        }
-        function toggleAI() {
-            settings.aiEnabled = !settings.aiEnabled;
-            var toggle = document.getElementById('ai-toggle');
-            toggle.classList.toggle('on', settings.aiEnabled);
-            toggle.setAttribute('aria-checked', settings.aiEnabled);
-        }
-        function saveSettings() {
-            settings.model = document.getElementById('model-select').value;
-            var supaUrl = document.getElementById('supabase-url-input');
-            var supaKey = document.getElementById('supabase-key-input');
-            if (supaUrl) settings.supabaseUrl = supaUrl.value.trim().replace(/\/+$/, '');
-            if (supaKey) settings.supabaseAnonKey = supaKey.value.trim();
-            persistSettings();
-            closeSettings();
-            showToast('Settings saved');
-            flushTelemetryQueue();
+            // No-op: settings are hardcoded and not user-editable in this build.
         }
 
         // ──────────────────────────────────────────────────────────────
@@ -1141,13 +1004,6 @@
             console.log('[Telemetry] Queue contents:', telemetryQueue);
             console.log('[Telemetry] Session ID:', sessionId);
             showToast('Logged to browser console');
-        }
-        function clearTelemetry() {
-            if (!confirm('Clear all buffered telemetry events? (Already-synced events on the backend are not affected.)')) return;
-            telemetryQueue = [];
-            persistTelemetryQueue();
-            document.getElementById('telemetry-event-count').textContent = '0';
-            showToast('Telemetry queue cleared');
         }
 
         // ──────────────────────────────────────────────────────────────
@@ -2000,13 +1856,6 @@
                 startingQuestionIndex: currentQuestionIndex
             });
             loadQuestion();
-
-            // Close settings modal on Escape
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && document.getElementById('settings-modal').classList.contains('active')) {
-                    closeSettings();
-                }
-            });
         };
     </script>
 </body>
