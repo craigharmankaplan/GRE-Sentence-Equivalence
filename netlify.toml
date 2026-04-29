@@ -13,5 +13,9 @@
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
-    X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    # Allow embedding only inside the Kaplan Learning Path LMS.
+    # frame-ancestors is the modern replacement for X-Frame-Options;
+    # we deliberately omit X-Frame-Options because it can't express an allowlist
+    # and modern browsers prefer CSP frame-ancestors when both are present.
+    Content-Security-Policy = "frame-ancestors 'self' https://kna.learnwithatom.com"
