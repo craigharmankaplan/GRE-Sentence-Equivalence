@@ -8,14 +8,16 @@
   to = "/sentequiv.html"
   status = 200
 
-# Reasonable security headers
+# Reasonable security headers.
+#
+# NOTE on framing: this site is embedded as an iframe inside the Atom LMS
+# (https://kna.learnwithatom.com). Chrome 146+ enforces CSP frame-ancestors
+# over the older X-Frame-Options header — and X-Frame-Options: DENY would
+# block the iframe outright. We use frame-ancestors to allow self + the LMS
+# origin (and its subdomains) and omit X-Frame-Options entirely.
 [[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    # Allow embedding only inside the Kaplan Learning Path LMS.
-    # frame-ancestors is the modern replacement for X-Frame-Options;
-    # we deliberately omit X-Frame-Options because it can't express an allowlist
-    # and modern browsers prefer CSP frame-ancestors when both are present.
-    Content-Security-Policy = "frame-ancestors 'self' https://kna.learnwithatom.com"
+    Content-Security-Policy = "frame-ancestors 'self' https://kna.learnwithatom.com https://*.learnwithatom.com"
