@@ -288,6 +288,21 @@
         /* Toast */
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); padding: 12px 20px; border-radius: 10px; background: var(--kaplan-charcoal); color: white; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 300; transition: transform 0.3s ease-out; pointer-events: none; }
         .toast.visible { transform: translateX(-50%) translateY(0); }
+        
+        /* Reflow: keep the 4-step stepper readable at 320px (WCAG 1.4.10) */
+        @media (max-width: 480px) {
+            .progress-stepper { padding: 12px 8px; }
+            .step-boxes { gap: 4px; }
+            .step-box {
+                padding: 8px 2px;
+                font-size: 10px;
+                letter-spacing: 0.02em;
+            }
+            .step-box.active {
+                font-size: 11px;
+                letter-spacing: 0.04em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -411,7 +426,7 @@
 
             <section class="question-header" aria-label="Question sentence">
                 <p id="question-label" class="label"></p>
-                <p id="sentence-display" class="sentence" tabindex="0">Loading question...</p>
+                <p id="sentence-display" class="sentence">Loading question...</p>
             </section>
 
             <div class="steps-area">
@@ -1221,10 +1236,8 @@
 
             if (currentStep === 1 || isFeedbackState) {
                 prevBtn.disabled = true;
-                prevBtn.setAttribute('aria-hidden', 'true');
             } else {
                 prevBtn.disabled = false;
-                prevBtn.removeAttribute('aria-hidden');
             }
 
             nextBtn.textContent = isFeedbackState ? 'Continue' : 'Check Step ' + currentStep;
