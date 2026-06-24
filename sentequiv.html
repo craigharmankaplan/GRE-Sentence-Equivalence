@@ -55,7 +55,7 @@
         .workspace { border-radius: 20px; box-shadow: 0 8px 30px rgba(36,15,110,0.08); overflow: hidden; min-height: 550px; display: flex; flex-direction: column; }
         .question-header { padding: 32px; background: var(--kaplan-purple); position: relative; overflow: hidden; }
         .question-header::before { content: ''; position: absolute; width: 140%; height: 300px; border-radius: 50%; border-top: 3px solid rgba(255,255,255,0.12); left: -20%; bottom: -180px; pointer-events: none; }
-        .question-header .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.85); margin-bottom: 16px; }
+        .question-header .label { font-family: 'Open Sans', 'Arial', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.85); margin-bottom: 16px; }
         .question-header .sentence { font-size: 20px; line-height: 1.6; color: var(--kaplan-white); font-family: 'Open Sans', 'Arial', sans-serif; }
         .steps-area { padding: 32px; flex-grow: 1; }
         .step-container { display: none; }
@@ -91,7 +91,7 @@
         .stack-lg > * + * { margin-top: 24px; }
         .feedback-box { display: none; padding: 20px; border-radius: 16px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.12); animation: slideIn 0.3s ease-out; }
         .feedback-box.active { display: block; }
-        .feedback-box h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.9); margin-bottom: 8px; }
+        .feedback-box h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.9); margin-bottom: 8px; }
         .feedback-box p { font-size: 16px; line-height: 1.6; font-weight: 500; }
         .feedback-purple { background: var(--kaplan-purple); }
         .feedback-teal { background: #0047B3; }
@@ -425,7 +425,7 @@
             <div id="workspace-area" class="kaplan-card workspace">
 
             <section class="question-header" aria-label="Question sentence">
-                <p id="question-label" class="label"></p>
+                <h2 id="question-label" class="label"></h2>
                 <p id="sentence-display" class="sentence">Loading question...</p>
             </section>
 
@@ -460,7 +460,7 @@
                             <div id="step1-ai-coach-indicators" class="ai-coach-match-indicators"></div>
                         </div>
                         <div id="step1-feedback" class="feedback-box feedback-purple" aria-live="polite">
-                            <h4>Expert Clue Analysis</h4>
+                            <h3>Expert Clue Analysis</h3>
                             <p id="step1-feedback-text"></p>
                         </div>
                     </div>
@@ -495,7 +495,7 @@
                             <div id="step2-ai-coach-indicators" class="ai-coach-match-indicators"></div>
                         </div>
                         <div id="step2-feedback" class="feedback-box feedback-teal" aria-live="polite">
-                            <h4>Expert Prediction</h4>
+                            <h3>Expert Prediction</h3>
                             <p id="step2-feedback-text"></p>
                         </div>
                     </div>
@@ -535,7 +535,7 @@
                         <div id="step3-feedback" class="feedback-box feedback-green" aria-live="polite">
                             <div class="feedback-header">
                                 <span id="accuracy-badge" class="accuracy-badge"></span>
-                                <h4 style="margin-bottom:0;">Choice Analysis</h4>
+                                <h3 style="margin-bottom:0;">Choice Analysis</h3>
                             </div>
                             <p id="step3-feedback-text"></p>
                         </div>
@@ -1116,7 +1116,16 @@
 
         function announce(message) {
             srAnnouncements.textContent = '';
-            setTimeout(function() { srAnnouncements.textContent = message; }, 100);
+            setTimeout(function() {
+                srAnnouncements.textContent = message;
+                // Clear after it's been announced so the text isn't left in the DOM
+                // as stray hidden content a screen-reader user could browse into.
+                setTimeout(function() {
+                    if (srAnnouncements.textContent === message) {
+                        srAnnouncements.textContent = '';
+                    }
+                }, 3000);
+            }, 100);
         }
 
         function loadQuestion() {
