@@ -1,13 +1,11 @@
-// netlify/functions/grade.js
+// api/grade.mjs
 // Server-side proxy for Gemini grading. Keeps GEMINI_API_KEY off the client.
-// Runs on Netlify Functions 2.0 (Node 20, Web standard Request/Response).
+// Runs on Vercel Functions (Node.js runtime, Web standard Request/Response).
 
 const ALLOWED_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-pro']);
 const GEMINI_TIMEOUT_MS = 12000;
 
-export default async (req) => {
-    if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
-
+export async function POST(req) {
     let body;
     try {
         body = await req.json();
@@ -124,7 +122,7 @@ export default async (req) => {
     }
 
     return json(parsed, 200);
-};
+}
 
 // Defensive JSON parser: handles Gemini's occasional markdown-fenced or
 // preamble-wrapped responses even when responseMimeType is set to application/json.
