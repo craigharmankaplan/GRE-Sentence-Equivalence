@@ -801,11 +801,11 @@
             document.getElementById('step' + step + '-ai-coach').classList.remove('visible');
         }
 
-        // Proxy call to /.netlify/functions/grade — no API key on the client.
+        // Proxy call to /api/grade — no API key on the client.
         function callGradingProxy(payload) {
             var controller = new AbortController();
             var timeoutId = setTimeout(function() { controller.abort(); }, 14000);
-            return fetch('/.netlify/functions/grade', {
+            return fetch('/api/grade', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
