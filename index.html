@@ -131,10 +131,10 @@
         @media (min-width: 768px) { .page-header h1 { font-size: 19px; } }
         .collapsible-hint { padding: 0; }
         .hint-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding: 20px; text-align: left; gap: 12px; border-radius: 16px; }
-        .hint-toggle h3 { font-size: 16px; font-weight: 700; color: var(--kaplan-purple); margin: 0; flex: 1; }
-        .hint-toggle.teal h3  { color: var(--text-on-blue-bg); }
-        .hint-toggle.green h3 { color: var(--text-on-green-bg); }
-        .hint-toggle.gold h3  { color: var(--text-on-yellow-bg); }
+        .hint-toggle h2 { font-size: 16px; font-weight: 700; color: var(--kaplan-purple); margin: 0; flex: 1; }
+        .hint-toggle.teal h2  { color: var(--text-on-blue-bg); }
+        .hint-toggle.green h2 { color: var(--text-on-green-bg); }
+        .hint-toggle.gold h2  { color: var(--text-on-yellow-bg); }
         .hint-toggle:focus { outline: none; }
         .hint-toggle:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-radius: 16px; }
         .hint-icon-wrap { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--kaplan-purple); display: flex; align-items: center; justify-content: center; color: white; }
@@ -1140,7 +1140,7 @@
             currentQuestionStepTimes = [0, 0, 0, 0];
 
             optionsGrid.innerHTML = '';
-            q.options.sort().forEach(function(option, idx) {
+            q.options.slice().sort().forEach(function(option, idx) {
                 var letter = String.fromCharCode(65 + idx);
                 var btn = document.createElement('button');
                 btn.className = 'option-card';
@@ -1436,8 +1436,10 @@
         function renderPreviewSentence(word) {
             var q = questions[currentQuestionIndex];
             var previewEl = document.getElementById('sentence-preview');
-            // Build safely: split on the blank, insert highlighted span
-            var parts = q.sentence.split('_________');
+            // Build safely: split on the blank, insert highlighted span.
+            // Split on a run of underscores rather than an exact count — question
+            // sentences are not consistently written with the same number.
+            var parts = q.sentence.split(/_{5,}/);
             previewEl.innerHTML = '';
             previewEl.appendChild(document.createTextNode(parts[0] || ''));
             var span = document.createElement('span');
